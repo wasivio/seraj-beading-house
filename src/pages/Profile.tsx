@@ -128,6 +128,13 @@ export const Profile: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 max-w-md mx-auto items-center pt-6">
         
+        {/* Logo */}
+        <img 
+          src="/logo.jpg" 
+          alt="Siraj Bedding House" 
+          className="w-16 h-16 rounded-full object-cover border-2 border-stone-200 dark:border-stone-800 shadow-md"
+        />
+
         {/* Title */}
         <div className="text-center flex flex-col items-center gap-1.5">
           <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">Secure Access</span>

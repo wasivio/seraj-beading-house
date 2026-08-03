@@ -50,13 +50,21 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           
           {/* Logo & Brand */}
-          <Link to="/" className="flex flex-col select-none">
-            <span className="font-sans font-extrabold tracking-tight text-xl text-stone-900 dark:text-stone-100 leading-none">
-              SIRAJ
-            </span>
-            <span className="font-sans font-light tracking-[0.25em] text-[8px] text-amber-700 dark:text-amber-400 mt-0.5 leading-none">
-              BEDDING HOUSE
-            </span>
+          {/* Logo & Brand */}
+          <Link to="/" className="flex items-center gap-2 select-none group">
+            <img 
+              src="/logo.jpg" 
+              alt="Siraj Bedding House" 
+              className="w-10 h-10 rounded-full object-cover border border-stone-200 dark:border-stone-850 group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="flex flex-col">
+              <span className="font-sans font-extrabold tracking-tight text-base text-stone-900 dark:text-stone-100 leading-none group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                SIRAJ
+              </span>
+              <span className="font-sans font-medium tracking-[0.18em] text-[7px] text-amber-700 dark:text-amber-400 mt-0.5 leading-none">
+                BEDDING HOUSE
+              </span>
+            </div>
           </Link>
 
           {/* Quick Location (Desktop/Tablet) */}

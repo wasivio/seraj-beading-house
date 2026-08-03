@@ -294,8 +294,15 @@ export const Home: React.FC = () => {
       <footer className="border-t border-stone-200/50 dark:border-stone-900 pt-8 pb-6 text-stone-500 dark:text-stone-400 text-xs flex flex-col gap-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* Col 1 */}
-          <div className="flex flex-col gap-2">
-            <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Siraj Bedding House</h4>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <img 
+                src="/logo.jpg" 
+                alt="Siraj Bedding House Logo" 
+                className="w-7 h-7 rounded-full object-cover border border-stone-200 dark:border-stone-800"
+              />
+              <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Siraj Bedding House</h4>
+            </div>
             <p className="font-sans leading-relaxed text-stone-400">
               Premium orthopedic mattresses, cushions, luxury sheets and foam blocks since 1976. Gorakhpur's leading sleep studio.
             </p>

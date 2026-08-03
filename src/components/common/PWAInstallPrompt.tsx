@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Sparkles, Download } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -85,9 +85,11 @@ export const PWAInstallPrompt: React.FC = () => {
 
             {/* Header */}
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-amber-700/20 text-amber-450 border border-amber-800/35 flex-shrink-0">
-                <Sparkles size={20} className="animate-pulse" />
-              </div>
+              <img 
+                src="/logo.jpg" 
+                alt="Siraj Bedding House" 
+                className="w-10 h-10 rounded-xl object-cover border border-amber-800/35 flex-shrink-0"
+              />
               <div>
                 <h4 className="font-sans font-bold text-sm text-stone-100">
                   Install Siraj Bedding App
