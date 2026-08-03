@@ -171,31 +171,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
         </div>
 
         {/* Price & Cart CTA */}
-        <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-stone-100 dark:border-stone-850/50">
-          <div className="flex flex-col">
+        <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-stone-100 dark:border-stone-850/50">
+          
+          {/* Price row */}
+          <div className="flex items-center justify-between gap-1">
             <div className="flex items-baseline gap-1.5">
               <span className="font-sans font-extrabold text-stone-900 dark:text-stone-100 text-sm">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.originalPrice > product.price && (
-                <span className="font-sans text-[11px] text-stone-400 line-through">
+                <span className="font-sans text-[10px] text-stone-400 line-through">
                   ₹{product.originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
             {product.discountPercent > 0 && (
-              <span className="text-[9px] font-sans text-emerald-600 font-bold">
-                Save ₹{(product.originalPrice - product.price).toLocaleString('en-IN')}
+              <span className="text-[9px] font-sans text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-md">
+                -{product.discountPercent}%
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          {/* Action buttons row */}
+          <div className="flex items-center gap-1.5 w-full">
             {/* Quick Add To Cart Button */}
             <button
               onClick={handleAddToCart}
               disabled={product.stockStatus === 'out_of_stock'}
-              className="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-700 hover:text-stone-100 dark:hover:bg-amber-600 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-xl bg-stone-100 dark:bg-stone-850 text-stone-750 dark:text-stone-300 hover:bg-amber-700 hover:text-stone-100 dark:hover:bg-amber-600 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
               title="Add to Cart"
             >
               <ShoppingBag size={14} />
@@ -203,9 +206,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
             <button
               onClick={handleBuyNow}
               disabled={product.stockStatus === 'out_of_stock'}
-              className="px-2.5 py-1.5 rounded-xl bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 text-[10px] font-sans font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-grow py-2 rounded-xl bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 text-xs font-sans font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-center"
             >
-              Buy
+              Buy Now
             </button>
           </div>
         </div>
