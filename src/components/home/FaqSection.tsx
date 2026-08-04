@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { FAQ_DATA } from '../../utils/mockData';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const FaqSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { t } = useLanguage();
 
   const toggleIndex = (idx: number) => {
     setOpenIndex(prev => (prev === idx ? null : idx));
@@ -13,7 +15,7 @@ export const FaqSection: React.FC = () => {
     <section className="py-8 w-full max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Help Center</span>
-        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">Frequently Asked Questions</h2>
+        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">{t('faqs')}</h2>
       </div>
 
       <div className="flex flex-col gap-3">

@@ -10,6 +10,7 @@ import type { Product } from '../types';
 import { firebaseService } from '../services/firebaseService';
 import { MOCK_CATEGORIES, WHY_CHOOSE_US, STORE_STATS, BRAND_DATA } from '../utils/mockData';
 import { useNotifications } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -20,6 +21,7 @@ export const Home: React.FC = () => {
 
   const navigate = useNavigate();
   const { showToast } = useNotifications();
+  const { t } = useLanguage();
 
   const fetchProducts = async () => {
     try {
@@ -68,8 +70,8 @@ export const Home: React.FC = () => {
       <section className="w-full">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-sans font-extrabold text-lg sm:text-xl tracking-tight">Shop By Category</h2>
-          <Link to="/categories" className="text-xs font-bold text-amber-700 dark:text-amber-450 hover:underline flex items-center gap-1">
-            <span>See All</span>
+          <Link to="/categories" className="text-xs font-bold text-amber-700 dark:text-amber-455 hover:underline flex items-center gap-1">
+            <span>{t('viewAll')}</span>
             <ArrowRight size={12} />
           </Link>
         </div>
@@ -105,14 +107,14 @@ export const Home: React.FC = () => {
             <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative z-10 flex flex-col">
               <span className="bg-white/20 text-white text-[9px] font-sans font-bold px-2 py-0.5 rounded-full w-max mb-3 uppercase tracking-wider">Flash Sale</span>
-              <h3 className="font-sans font-extrabold text-xl sm:text-2xl leading-tight">Today's Deals - Flat 40% Off</h3>
+              <h3 className="font-sans font-extrabold text-xl sm:text-2xl leading-tight">{t('todayDeals')} - Flat 40% Off</h3>
               <p className="font-sans text-xs text-stone-200 mt-1">Upgrade your sleep posture with premium Memory Contour Pillows.</p>
             </div>
             <button 
               onClick={() => navigate('/categories?category=pillow')}
               className="bg-white text-amber-900 hover:bg-stone-50 font-sans font-bold text-xs py-3 px-6 rounded-xl transition-all relative z-10 cursor-pointer flex items-center gap-2"
             >
-              <span>Shop Deals</span>
+              <span>{t('buyNow')}</span>
               <ArrowRight size={14} />
             </button>
           </div>
@@ -130,11 +132,11 @@ export const Home: React.FC = () => {
         <section className="w-full">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Popular Choice</span>
-              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">Trending Products</h2>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">{t('popularChoice')}</span>
+              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">{t('trending')}</h2>
             </div>
             <Link to="/categories?filter=trending" className="text-xs font-bold text-amber-700 dark:text-amber-450 hover:underline flex items-center gap-1">
-              <span>View All</span>
+              <span>{t('viewAll')}</span>
               <ArrowRight size={12} />
             </Link>
           </div>
@@ -174,10 +176,10 @@ export const Home: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Customer Favorites</span>
-              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">Best Sellers</h2>
+              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">{t('bestSellers')}</h2>
             </div>
             <Link to="/categories?filter=best_seller" className="text-xs font-bold text-amber-700 dark:text-amber-455 hover:underline flex items-center gap-1">
-              <span>View All</span>
+              <span>{t('viewAll')}</span>
               <ArrowRight size={12} />
             </Link>
           </div>
@@ -210,7 +212,7 @@ export const Home: React.FC = () => {
       <section className="w-full">
         <div className="text-center mb-8">
           <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Our Pillars</span>
-          <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">Why Choose Siraj Bedding</h2>
+          <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">{t('whyChooseUs')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface HeaderProps {
   onSearchOpen: () => void;
@@ -17,9 +18,10 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
   const { wishlist } = useWishlist();
   const { unreadCount } = useNotifications();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const selectedLocation = 'Gorakhpur, UP';
+  const selectedLocation = t('location');
 
   useEffect(() => {
     const goOnline = () => setIsOffline(false);
@@ -79,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
             className="flex-grow max-w-lg relative cursor-pointer group hidden sm:block"
           >
             <div className="w-full bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-full py-1.5 pl-4 pr-10 text-sm text-stone-400 flex items-center justify-between group-hover:border-stone-300 dark:group-hover:border-stone-700 transition-all duration-200">
-              <span>Search premium foam, mattress, pillows...</span>
+              <span>{t('searchPlaceholder')}</span>
               <Search size={16} className="text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors" />
             </div>
           </div>
@@ -95,6 +97,19 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
             >
               <Search size={20} />
             </button>
+
+            {/* Language Selector */}
+            <div className="relative flex items-center">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as any)}
+                className="text-[10px] font-sans font-extrabold bg-stone-100 dark:bg-stone-850 text-stone-700 dark:text-stone-300 rounded-lg px-1.5 py-1 border-none outline-none focus:ring-0 cursor-pointer appearance-none min-w-[34px] text-center"
+              >
+                <option value="en">EN</option>
+                <option value="hi">हि</option>
+                <option value="bn">বা</option>
+              </select>
+            </div>
 
             {/* Dark/Light Toggle */}
             <button 

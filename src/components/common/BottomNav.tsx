@@ -3,41 +3,43 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Grid, Heart, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const BottomNav: React.FC = () => {
   const { cartItems } = useCart();
   const { wishlist } = useWishlist();
   const location = useLocation();
+  const { t } = useLanguage();
 
   const totalCartQty = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const navItems = [
     {
       to: '/',
-      label: 'Home',
+      label: t('home'),
       icon: Home,
       exact: true
     },
     {
       to: '/categories',
-      label: 'Categories',
+      label: t('categories'),
       icon: Grid
     },
     {
       to: '/wishlist',
-      label: 'Wishlist',
+      label: t('wishlist'),
       icon: Heart,
       badge: wishlist.length
     },
     {
       to: '/cart',
-      label: 'Cart',
+      label: t('cart'),
       icon: ShoppingBag,
       badge: totalCartQty
     },
     {
       to: '/profile',
-      label: 'Profile',
+      label: t('profile'),
       icon: User
     }
   ];

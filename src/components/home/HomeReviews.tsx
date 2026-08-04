@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, Quote } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ReviewItem {
   name: string;
@@ -30,11 +31,13 @@ const REVIEWS: ReviewItem[] = [
 ];
 
 export const HomeReviews: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-8 w-full">
       <div className="text-center mb-8">
         <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Testimonials</span>
-        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">Customer Stories</h2>
+        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-1 tracking-tight">{t('testimonials')}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
