@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Bell, Volume2 } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import type { Notification } from '../types';
 
 export const Notifications: React.FC = () => {
+  const { t } = useLanguage();
   const {
     notifications,
     unreadCount,
@@ -59,14 +61,14 @@ export const Notifications: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Communication Desk</span>
-          <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">Notification Center</h2>
+          <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">{t('notifications')}</h2>
         </div>
         {unreadCount > 0 && activeTab === 'list' && (
           <button
             onClick={markAllNotificationsAsRead}
             className="text-xs font-bold text-amber-700 dark:text-amber-405 hover:underline cursor-pointer"
           >
-            Mark all read
+            {t('markAllRead')}
           </button>
         )}
       </div>
@@ -117,7 +119,7 @@ export const Notifications: React.FC = () => {
               <div className="p-4 bg-stone-100 dark:bg-stone-900 rounded-full text-stone-450">
                 <Bell size={32} />
               </div>
-              <h4 className="font-sans font-bold text-base">All Clear</h4>
+              <h4 className="font-sans font-bold text-base">{t('noNotifications')}</h4>
               <p className="font-sans text-xs text-stone-500 dark:text-stone-400">
                 You have no new alerts in your notification queue.
               </p>

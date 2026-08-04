@@ -5,8 +5,10 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { getThumbnailUrl } from '../services/cloudinaryService';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Cart: React.FC = () => {
+  const { t } = useLanguage();
   const {
     cartItems,
     savedForLater,
@@ -66,7 +68,7 @@ export const Cart: React.FC = () => {
       
       {/* Title */}
       <div className="flex flex-col">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Shopping Cart</span>
+        <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">{t('shoppingCart')}</span>
         <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">Your Comfort Bag</h2>
       </div>
 
@@ -75,7 +77,7 @@ export const Cart: React.FC = () => {
           <div className="p-4 bg-stone-100 dark:bg-stone-900 rounded-full text-stone-400">
             <ShoppingBag size={32} />
           </div>
-          <h4 className="font-sans font-bold text-base">Your Cart is Empty</h4>
+          <h4 className="font-sans font-bold text-base">{t('emptyCart')}</h4>
           <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
             Discover premium mattresses and home accessories to start crafting your ultimate bedroom suite.
           </p>
@@ -83,7 +85,7 @@ export const Cart: React.FC = () => {
             to="/categories"
             className="mt-2 bg-luxury-gold hover:opacity-90 py-2.5 px-6 rounded-xl font-sans font-bold text-xs text-stone-100 cursor-pointer shadow-md inline-block"
           >
-            Start Shopping
+            {t('continueShopping')}
           </Link>
         </div>
       ) : (
@@ -174,7 +176,7 @@ export const Cart: React.FC = () => {
             
             {/* Coupon Code Input */}
             <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block mb-2">Apply Promo Code</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block mb-2">{t('applyCoupon')}</span>
               {appliedCoupon ? (
                 <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/20 text-emerald-805 dark:text-emerald-450 border border-emerald-200/40 p-3 rounded-xl">
                   <div className="flex items-center gap-2">
@@ -188,14 +190,14 @@ export const Cart: React.FC = () => {
                     onClick={removeCouponCode}
                     className="text-stone-400 hover:text-stone-700 p-1 text-xs font-bold"
                   >
-                    Remove
+                    {t('remove')}
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleApplyCoupon} className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Enter code e.g. WELCOME100"
+                    placeholder={t('enterCoupon')}
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     className="flex-grow bg-stone-50 dark:bg-stone-900 border border-stone-250 dark:border-stone-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-700"
@@ -205,7 +207,7 @@ export const Cart: React.FC = () => {
                     disabled={applying}
                     className="bg-luxury-gold hover:opacity-90 text-stone-100 font-sans font-bold text-xs py-2 px-4 rounded-xl cursor-pointer disabled:opacity-50"
                   >
-                    {applying ? 'Applying...' : 'Apply'}
+                    {applying ? 'Applying...' : t('apply')}
                   </button>
                 </form>
               )}
@@ -219,30 +221,30 @@ export const Cart: React.FC = () => {
 
             {/* Billing details */}
             <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 border-b border-stone-100 dark:border-stone-950 pb-2">Order Price Summary</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 border-b border-stone-100 dark:border-stone-950 pb-2">{t('orderSummary')}</span>
 
               <div className="flex flex-col gap-2.5 text-xs font-sans">
                 <div className="flex justify-between text-stone-500 dark:text-stone-400">
-                  <span>Cart Subtotal</span>
+                  <span>{t('subtotal')}</span>
                   <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Coupon Discount</span>
+                    <span>{t('couponDiscount')}</span>
                     <span>- ₹{discount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-stone-500 dark:text-stone-400">
-                  <span>Delivery Charge</span>
+                  <span>{t('shipping')}</span>
                   <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge.toLocaleString('en-IN')}`}</span>
                 </div>
                 <div className="flex justify-between text-stone-500 dark:text-stone-400">
-                  <span>GST Taxes (18%)</span>
+                  <span>{t('tax')}</span>
                   <span>₹{tax.toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-stone-100 dark:border-stone-850/30 pt-3 text-sm font-extrabold text-stone-900 dark:text-stone-100">
-                  <span>Grand Total</span>
+                  <span>{t('total')}</span>
                   <span>₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
               </div>
@@ -252,7 +254,7 @@ export const Cart: React.FC = () => {
                 onClick={handleCheckout}
                 className="w-full bg-luxury-gold hover:opacity-90 active:scale-[0.98] text-stone-100 font-sans font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all"
               >
-                <span>Proceed to Checkout</span>
+                <span>{t('checkout')}</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -265,7 +267,7 @@ export const Cart: React.FC = () => {
       {/* Saved For Later Section */}
       {savedForLater.length > 0 && (
         <section className="flex flex-col gap-4 pt-8 border-t border-stone-200/50 dark:border-stone-850/50 mt-4">
-          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">Saved For Later ({savedForLater.length})</h3>
+          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">{t('savedLater')} ({savedForLater.length})</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {savedForLater.map((item) => (
@@ -287,7 +289,7 @@ export const Cart: React.FC = () => {
                       onClick={() => moveToCart(item.id)}
                       className="text-xs font-bold text-amber-700 dark:text-amber-405 hover:underline cursor-pointer"
                     >
-                      Move to Cart
+                      {t('moveToCart')}
                     </button>
                   </div>
                 </div>

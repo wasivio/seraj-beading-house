@@ -29,6 +29,8 @@ export const translations = {
     edit: 'Edit',
     delete: 'Delete',
     cancel: 'Cancel',
+    remove: 'Remove',
+    apply: 'Apply',
     
     // Home sections
     popularChoice: 'Popular Choice',
@@ -42,6 +44,9 @@ export const translations = {
     quickView: 'Quick View',
     
     // Cart page
+    shoppingCart: 'Shopping Cart',
+    orderSummary: 'Order Summary',
+    promoCode: 'Promo Code',
     savedLater: 'Saved for Later',
     applyCoupon: 'Apply Coupon',
     enterCoupon: 'Enter coupon code',
@@ -56,9 +61,14 @@ export const translations = {
     emptyCart: 'Your cart is empty',
     
     // Checkout
+    deliveryAddress: 'Delivery Address',
+    addNewAddress: 'Add New Address',
     selectSlot: 'Select Delivery Slot',
     paymentMethod: 'Select Payment Method',
     placeOrder: 'Place Order',
+    backToPayments: 'Back to Payments',
+    processing: 'Processing...',
+    placeOrderNow: 'Place Order Now',
     cod: 'Cash on Delivery (COD)',
     online: 'UPI / Cards / NetBanking',
     gpsSuccess: 'Coordinates fetched successfully!',
@@ -72,6 +82,9 @@ export const translations = {
     trackOrder: 'Track Order',
     
     // Profile & Orders
+    myAccount: 'My Account',
+    editProfile: 'Edit Profile',
+    supportHelp: 'Support & Help',
     helpCenter: 'Help Center',
     myOrders: 'My Orders',
     addressBook: 'Address Book',
@@ -89,7 +102,26 @@ export const translations = {
     priceLowHigh: 'Price: Low to High',
     priceHighLow: 'Price: High to Low',
     ratingHighLow: 'Rating: High to Low',
-    clearAll: 'Clear All'
+    clearAll: 'Clear All',
+
+    // Product Details & Reviews
+    description: 'Description',
+    specifications: 'Specifications',
+    reviews: 'Reviews',
+    addReview: 'Add a Review',
+    relatedProducts: 'Related Products',
+    rating: 'Rating',
+    comment: 'Comment',
+    submitReview: 'Submit Review',
+
+    // Wishlist
+    myWishlist: 'My Wishlist',
+    emptyWishlist: 'Your Wishlist is Empty',
+
+    // Notifications
+    notifications: 'Notifications',
+    markAllRead: 'Mark all as read',
+    noNotifications: 'No notifications yet'
   },
   hi: {
     // Nav
@@ -117,6 +149,8 @@ export const translations = {
     edit: 'संपादित करें',
     delete: 'हटाएं',
     cancel: 'रद्द करें',
+    remove: 'हटाएं',
+    apply: 'लागू करें',
     
     // Home sections
     popularChoice: 'लोकप्रिय पसंद',
@@ -130,6 +164,9 @@ export const translations = {
     quickView: 'त्वरित झलक',
     
     // Cart page
+    shoppingCart: 'शॉपिंग कार्ट',
+    orderSummary: 'ऑर्डर सारांश',
+    promoCode: 'प्रोमो कोड',
     savedLater: 'बाद के लिए सहेजा गया',
     applyCoupon: 'कूपन लागू करें',
     enterCoupon: 'कूपन कोड दर्ज करें',
@@ -144,9 +181,14 @@ export const translations = {
     emptyCart: 'आपकी कार्ट खाली है',
     
     // Checkout
+    deliveryAddress: 'डिलिवरी का पता',
+    addNewAddress: 'नया पता जोड़ें',
     selectSlot: 'डिलिवरी स्लॉट चुनें',
     paymentMethod: 'भुगतान विधि चुनें',
     placeOrder: 'ऑर्डर करें',
+    backToPayments: 'भुगतान पर वापस जाएं',
+    processing: 'प्रक्रिया जारी है...',
+    placeOrderNow: 'अभी ऑर्डर करें',
     cod: 'कैश ऑन डिलीवरी (COD)',
     online: 'UPI / कार्ड / नेटबैंकिंग',
     gpsSuccess: 'स्थान सफलतापूर्वक मिल गया!',
@@ -160,6 +202,9 @@ export const translations = {
     trackOrder: 'ऑर्डर ट्रैक करें',
     
     // Profile & Orders
+    myAccount: 'मेरा अकाउंट',
+    editProfile: 'प्रोफाइल बदलें',
+    supportHelp: 'सहायता और सपोर्ट',
     helpCenter: 'सहायता केंद्र',
     myOrders: 'मेरे ऑर्डर्स',
     addressBook: 'पते की सूची',
@@ -177,7 +222,26 @@ export const translations = {
     priceLowHigh: 'कीमत: कम से अधिक',
     priceHighLow: 'कीमत: अधिक से कम',
     ratingHighLow: 'रेटिंग: अधिक से कम',
-    clearAll: 'साफ़ करें'
+    clearAll: 'साफ़ करें',
+
+    // Product Details & Reviews
+    description: 'विवरण',
+    specifications: 'विशेषताएं',
+    reviews: 'समीक्षाएं',
+    addReview: 'समीक्षा जोड़ें',
+    relatedProducts: 'संबंधित उत्पाद',
+    rating: 'रेटिंग',
+    comment: 'टिप्पणी',
+    submitReview: 'समीक्षा भेजें',
+
+    // Wishlist
+    myWishlist: 'मेरी विशलिस्ट',
+    emptyWishlist: 'आपकी विशलिस्ट खाली है',
+
+    // Notifications
+    notifications: 'सूचनाएं',
+    markAllRead: 'सभी को पढ़ा हुआ चिह्नित करें',
+    noNotifications: 'अभी कोई सूचना नहीं है'
   },
   bn: {
     // Nav
@@ -205,6 +269,8 @@ export const translations = {
     edit: 'সম্পাদনা',
     delete: 'মুছে ফেলুন',
     cancel: 'বাতিল',
+    remove: 'মুছে ফেলুন',
+    apply: 'প্রয়োগ',
     
     // Home sections
     popularChoice: 'জনপ্রিয় পছন্দ',
@@ -218,6 +284,9 @@ export const translations = {
     quickView: 'ঝটপট দেখুন',
     
     // Cart page
+    shoppingCart: 'শপিং কার্ট',
+    orderSummary: 'অর্ডার বিবরণ',
+    promoCode: 'প্রোমো কোড',
     savedLater: 'পরে কেনার জন্য সংরক্ষিত',
     applyCoupon: 'কুপন কোড দিন',
     enterCoupon: 'কুপন কোডটি লিখুন',
@@ -232,9 +301,14 @@ export const translations = {
     emptyCart: 'আপনার কার্ট খালি রয়েছে',
     
     // Checkout
+    deliveryAddress: 'ডেলিভারি ঠিকানা',
+    addNewAddress: 'নতুন ঠিকানা যোগ করুন',
     selectSlot: 'ডেলিভারি স্লট নির্বাচন করুন',
     paymentMethod: 'পেমেন্ট পদ্ধতি নির্বাচন করুন',
     placeOrder: 'অর্ডার সম্পন্ন করুন',
+    backToPayments: 'পেমেন্টে ফিরে যান',
+    processing: 'প্রক্রিয়াকরণ হচ্ছে...',
+    placeOrderNow: 'এখনই অর্ডার করুন',
     cod: 'ক্যাশ অন ডেলিভারি (COD)',
     online: 'UPI / কার্ড / নেটব্যাংকিং',
     gpsSuccess: 'অবস্থান সফলভাবে পাওয়া গেছে!',
@@ -248,6 +322,9 @@ export const translations = {
     trackOrder: 'অর্ডার ট্র্যাক করুন',
     
     // Profile & Orders
+    myAccount: 'আমার অ্যাকাউন্ট',
+    editProfile: 'প্রোফাইল সম্পাদন',
+    supportHelp: 'সাহায্য ও সাপোর্ট',
     helpCenter: 'সাহায্য কেন্দ্র',
     myOrders: 'আমার অর্ডার',
     addressBook: 'ঠিকানার বই',
@@ -265,7 +342,26 @@ export const translations = {
     priceLowHigh: 'মূল্য: কম থেকে বেশি',
     priceHighLow: 'মূল্য: বেশি থেকে কম',
     ratingHighLow: 'রেটিং: বেশি থেকে কম',
-    clearAll: 'মুছে ফেলুন'
+    clearAll: 'মুছে ফেলুন',
+
+    // Product Details & Reviews
+    description: 'বর্ণনা',
+    specifications: 'পণ্য বিবরণ',
+    reviews: 'রিভিউ সমূহ',
+    addReview: 'রিভিউ যোগ করুন',
+    relatedProducts: 'সম্পর্কিত পণ্য',
+    rating: 'রেটিং',
+    comment: 'মন্তব্য',
+    submitReview: 'রিভিউ জমা দিন',
+
+    // Wishlist
+    myWishlist: 'আমার উইশলিস্ট',
+    emptyWishlist: 'আপনার উইশলিস্ট খালি',
+
+    // Notifications
+    notifications: 'বিজ্ঞপ্তি সমূহ',
+    markAllRead: 'সব পঠিত হিসেবে চিহ্নিত করুন',
+    noNotifications: 'কোনো বিজ্ঞপ্তি নেই'
   }
 };
 

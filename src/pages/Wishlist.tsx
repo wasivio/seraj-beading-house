@@ -4,10 +4,12 @@ import { Heart, Trash2, ShoppingBag } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useNotifications } from '../context/NotificationContext';
 import { getThumbnailUrl } from '../services/cloudinaryService';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Wishlist: React.FC = () => {
   const { wishlist, removeFromWishlist, moveToCartFromWishlist } = useWishlist();
   const { showToast } = useNotifications();
+  const { t } = useLanguage();
 
   const handleMoveToCart = (prod: any) => {
     moveToCartFromWishlist(prod);
@@ -25,7 +27,7 @@ export const Wishlist: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col">
         <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">Saved items</span>
-        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">Your Wishlist</h2>
+        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">{t('myWishlist')}</h2>
       </div>
 
       {wishlist.length === 0 ? (
@@ -33,7 +35,7 @@ export const Wishlist: React.FC = () => {
           <div className="p-4 bg-stone-100 dark:bg-stone-900 rounded-full text-stone-400">
             <Heart size={32} />
           </div>
-          <h4 className="font-sans font-bold text-base">Wishlist is Empty</h4>
+          <h4 className="font-sans font-bold text-base">{t('emptyWishlist')}</h4>
           <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
             Keep track of premium mattresses and sofa cushions you love. Tap the heart icon on cards.
           </p>
@@ -41,7 +43,7 @@ export const Wishlist: React.FC = () => {
             to="/categories"
             className="mt-2 bg-luxury-gold hover:opacity-90 py-2.5 px-6 rounded-xl font-sans font-bold text-xs text-stone-100 cursor-pointer shadow-md inline-block"
           >
-            Explore Collections
+            {t('continueShopping')}
           </Link>
         </div>
       ) : (
@@ -79,7 +81,7 @@ export const Wishlist: React.FC = () => {
                     className="bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 font-sans font-bold text-[10px] py-1.5 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <ShoppingBag size={12} />
-                    <span>Move to Cart</span>
+                    <span>{t('moveToCart')}</span>
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, Lock
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
+import { useLanguage } from '../context/LanguageContext';
 import type { Address } from '../types';
 
 export const Profile: React.FC = () => {
@@ -11,6 +12,7 @@ export const Profile: React.FC = () => {
   const { showToast } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useLanguage();
 
   // Redirect check
   const redirectPath = searchParams.get('redirect') || '';
@@ -137,12 +139,12 @@ export const Profile: React.FC = () => {
 
         {/* Title */}
         <div className="text-center flex flex-col items-center gap-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">Secure Access</span>
-          <h2 className="font-sans font-extrabold text-2xl tracking-tight">Access Your Suite</h2>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">{t('secureAccess')}</span>
+          <h2 className="font-sans font-extrabold text-2xl tracking-tight">{t('accessSuite')}</h2>
           <p className="font-sans text-xs text-stone-500 max-w-xs mt-1">
             {redirectPath === 'checkout' 
               ? 'Please login briefly to complete shipping payment processes.' 
-              : 'Sign in to access addresses, check timeline logs, and edit preferences.'}
+              : t('signInDetails')}
           </p>
         </div>
 
@@ -307,14 +309,14 @@ export const Profile: React.FC = () => {
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-50 dark:border-stone-850/30">
             <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 flex items-center gap-1.5">
               <Edit size={12} />
-              <span>Contact Details</span>
+              <span>{t('editProfile')}</span>
             </span>
             {!isEditing && (
               <button 
                 onClick={() => setIsEditing(true)}
                 className="text-[10px] font-sans font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
               >
-                Edit
+                {t('edit')}
               </button>
             )}
           </div>
@@ -340,15 +342,15 @@ export const Profile: React.FC = () => {
               <div className="flex gap-2 mt-2">
                 <button
                   type="button" onClick={() => setIsEditing(false)}
-                  className="flex-grow bg-stone-105 hover:bg-stone-200 text-xs py-2 rounded-xl"
+                  className="flex-grow bg-stone-105 hover:bg-stone-200 text-xs py-2 rounded-xl animate-none"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-grow bg-luxury-gold text-stone-100 text-xs py-2 rounded-xl font-bold"
                 >
-                  Save
+                  {t('save')}
                 </button>
               </div>
             </form>
@@ -371,7 +373,7 @@ export const Profile: React.FC = () => {
           <div className="flex items-center justify-between mb-2 pb-2 border-b border-stone-50 dark:border-stone-850/30">
             <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 flex items-center gap-1.5">
               <MapPin size={12} />
-              <span>Default Address</span>
+              <span>{t('addressBook')}</span>
             </span>
           </div>
 
@@ -390,7 +392,7 @@ export const Profile: React.FC = () => {
             to="/checkout"
             className="text-[10px] font-sans font-bold text-amber-707 dark:text-amber-400 hover:underline mt-2 self-start flex items-center gap-1"
           >
-            <span>Manage Address Book</span>
+            <span>{t('addressBook')}</span>
             <ChevronRight size={10} />
           </Link>
         </div>
@@ -400,9 +402,9 @@ export const Profile: React.FC = () => {
       {/* Profile quick links navigation layout */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-4 shadow-sm flex flex-col">
         {([
-          { to: '/profile/orders', icon: ShoppingBag, label: 'Order History Log', desc: 'Track dispatch step statuses and invoices.' },
-          { to: '/wishlist', icon: Heart, label: 'Wishlist Comfort Collection', desc: 'Browse products pinned for later review.' },
-          { to: '/notifications', icon: Bell, label: 'Notification Settings Preferences', desc: 'Manage channels welcome offer subscriptions.' }
+          { to: '/profile/orders', icon: ShoppingBag, label: t('myOrders'), desc: 'Track dispatch step statuses and invoices.' },
+          { to: '/wishlist', icon: Heart, label: t('myWishlist'), desc: 'Browse products pinned for later review.' },
+          { to: '/notifications', icon: Bell, label: t('notifications'), desc: 'Manage channels welcome offer subscriptions.' }
         ] as const).map((lnk, idx) => {
           const Icon = lnk.icon;
           return (

@@ -5,9 +5,11 @@ import { ProductCard } from '../components/product/ProductCard';
 import { QuickViewModal } from '../components/product/QuickViewModal';
 import type { Product } from '../types';
 import { firebaseService } from '../services/firebaseService';
+import { useLanguage } from '../context/LanguageContext';
 import { MOCK_CATEGORIES } from '../utils/mockData';
 
 export const Categories: React.FC = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -177,7 +179,7 @@ export const Categories: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 border border-stone-200 dark:border-stone-800 rounded-xl text-xs font-sans font-bold hover:bg-stone-50 dark:hover:bg-stone-900 transition-all cursor-pointer text-stone-805 dark:text-stone-150"
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span>{t('filterTitle')}</span>
           </button>
 
           {/* Quick Sorting dropdown */}
@@ -189,9 +191,9 @@ export const Categories: React.FC = () => {
               className="bg-transparent border-none outline-none font-sans text-xs font-bold text-stone-800 dark:text-stone-200 cursor-pointer focus:ring-0"
             >
               <option value="popularity" className="bg-stone-50 dark:bg-stone-950">Popularity</option>
-              <option value="price_asc" className="bg-stone-50 dark:bg-stone-950">Price: Low to High</option>
-              <option value="price_desc" className="bg-stone-50 dark:bg-stone-950">Price: High to Low</option>
-              <option value="rating" className="bg-stone-50 dark:bg-stone-950">Customer Rating</option>
+              <option value="price_asc" className="bg-stone-50 dark:bg-stone-950">{t('priceLowHigh')}</option>
+              <option value="price_desc" className="bg-stone-50 dark:bg-stone-950">{t('priceHighLow')}</option>
+              <option value="rating" className="bg-stone-50 dark:bg-stone-950">{t('ratingHighLow')}</option>
               <option value="discount" className="bg-stone-50 dark:bg-stone-950">Discount Percent</option>
               <option value="newest" className="bg-stone-50 dark:bg-stone-950">New Arrivals</option>
             </select>
@@ -220,7 +222,7 @@ export const Categories: React.FC = () => {
             onClick={clearAllFilters}
             className="mt-2 bg-luxury-gold hover:opacity-90 py-2.5 px-6 rounded-xl font-sans font-bold text-xs text-stone-100 cursor-pointer shadow-md"
           >
-            Reset Filters
+            {t('clearAll')}
           </button>
         </div>
       ) : (
@@ -248,7 +250,7 @@ export const Categories: React.FC = () => {
               <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-900 pb-3 mb-4">
                 <h3 className="font-sans font-extrabold text-base flex items-center gap-2">
                   <SlidersHorizontal size={16} />
-                  <span>Filters</span>
+                  <span>{t('filterTitle')}</span>
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
@@ -372,13 +374,13 @@ export const Categories: React.FC = () => {
                 onClick={clearAllFilters}
                 className="flex-grow bg-stone-100 dark:bg-stone-850 hover:bg-stone-200 text-stone-700 dark:text-stone-200 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                Reset All
+                {t('clearAll')}
               </button>
               <button
                 onClick={() => setIsFilterOpen(false)}
                 className="flex-grow bg-luxury-gold hover:opacity-90 text-stone-100 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
               >
-                Apply
+                {t('apply')}
               </button>
             </div>
 

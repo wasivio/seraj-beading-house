@@ -9,10 +9,12 @@ import { useNotifications } from '../context/NotificationContext';
 import { getDetailsUrl, getThumbnailUrl } from '../services/cloudinaryService';
 import { ProductCard } from '../components/product/ProductCard';
 import { Dialog } from '../components/common/Dialog';
+import { useLanguage } from '../context/LanguageContext';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -362,14 +364,14 @@ export const ProductDetails: React.FC = () => {
                   className="flex-grow bg-stone-100 dark:bg-stone-850 hover:bg-stone-200 text-stone-800 dark:text-stone-100 font-sans font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
                 >
                   <ShoppingBag size={16} />
-                  <span>Add To Cart</span>
+                  <span>{t('addToCart')}</span>
                 </button>
                 <button
                   onClick={handleBuyNow}
                   disabled={product.stockStatus === 'out_of_stock'}
                   className="flex-grow bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 font-sans font-bold text-xs py-3 px-4 rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
                 >
-                  Buy Now
+                  {t('buyNow')}
                 </button>
               </div>
             </div>
@@ -399,7 +401,7 @@ export const ProductDetails: React.FC = () => {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-stone-200/50 dark:border-stone-850/50">
         {/* Specs column */}
         <div className="md:col-span-2 flex flex-col gap-4">
-          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">Specifications</h3>
+          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">{t('specifications')}</h3>
           <div className="border border-stone-200/60 dark:border-stone-800/40 rounded-2xl overflow-hidden bg-white dark:bg-stone-900">
             {Object.entries(product.specifications).map(([key, val], idx) => (
               <div 
@@ -447,12 +449,12 @@ export const ProductDetails: React.FC = () => {
       {/* Customer Reviews listing */}
       <section className="flex flex-col gap-6 pt-6 border-t border-stone-200/50 dark:border-stone-850/50">
         <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-900 pb-3">
-          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">Verified Purchase Reviews ({reviews.length})</h3>
+          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">{t('reviews')} ({reviews.length})</h3>
           <button
             onClick={() => setIsReviewFormOpen(true)}
             className="text-xs font-bold text-amber-700 dark:text-amber-405 hover:underline cursor-pointer"
           >
-            Write a Review
+            {t('addReview')}
           </button>
         </div>
 

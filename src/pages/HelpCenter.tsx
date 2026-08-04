@@ -1,8 +1,11 @@
 import React from 'react';
 import { Phone, Mail, Clock, MapPin, ShieldAlert, Award, MessageCircle } from 'lucide-react';
 import { FaqSection } from '../components/home/FaqSection';
+import { useLanguage } from '../context/LanguageContext';
 
 export const HelpCenter: React.FC = () => {
+  const { t } = useLanguage();
+
   const handleWhatsApp = () => {
     window.open('https://wa.me/919988776655?text=Hello%20Siraj%20Bedding%20House', '_blank');
   };
@@ -13,7 +16,7 @@ export const HelpCenter: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col text-center">
         <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">Customer Support</span>
-        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">Help Center & Policies</h2>
+        <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">{t('helpCenter')}</h2>
         <p className="font-sans text-xs text-stone-500 max-w-md mx-auto mt-1">
           Have questions about mattress sizing, shipping logistics, or return warranties? We are here to assist.
         </p>

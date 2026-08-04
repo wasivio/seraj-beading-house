@@ -5,9 +5,11 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
+import { useLanguage } from '../context/LanguageContext';
 import type { Address } from '../types';
 
 export const Checkout: React.FC = () => {
+  const { t } = useLanguage();
   const { cartItems, subtotal, shippingCharge, tax, discount, grandTotal, clearCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { showToast } = useNotifications();
@@ -222,14 +224,14 @@ export const Checkout: React.FC = () => {
               <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-850/50 pb-3 mb-4">
                 <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider flex items-center gap-2">
                   <MapPin size={16} className="text-amber-700" />
-                  <span>Select Delivery Address</span>
+                  <span>{t('deliveryAddress')}</span>
                 </h3>
                 {!isAddingAddress && (
                   <button
                     onClick={() => setIsAddingAddress(true)}
                     className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
                   >
-                    + Add New
+                    + {t('addNewAddress')}
                   </button>
                 )}
               </div>
@@ -384,7 +386,7 @@ export const Checkout: React.FC = () => {
               <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm">
                 <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 mb-4 border-b border-stone-100 dark:border-stone-850/30 pb-2">
                   <Clock size={16} className="text-amber-705" />
-                  <span>Choose Delivery Slot</span>
+                  <span>{t('selectSlot')}</span>
                 </h3>
 
                 {/* Dates pick row */}
@@ -440,7 +442,7 @@ export const Checkout: React.FC = () => {
               <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm">
                 <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 mb-4 border-b border-stone-100 dark:border-stone-850/30 pb-2">
                   <CreditCard size={16} className="text-amber-705" />
-                  <span>Select Payment Method</span>
+                  <span>{t('paymentMethod')}</span>
                 </h3>
 
                 <div className="flex flex-col gap-3">
@@ -540,14 +542,14 @@ export const Checkout: React.FC = () => {
                   onClick={() => setStep(2)}
                   className="flex-grow bg-stone-100 dark:bg-stone-850 text-stone-750 dark:text-stone-200 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  Back to Payments
+                  {t('backToPayments')}
                 </button>
                 <button
                   onClick={handlePlaceOrder}
                   disabled={placingOrder}
                   className="flex-grow bg-luxury-gold hover:opacity-90 text-stone-100 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50"
                 >
-                  {placingOrder ? 'Processing...' : 'Place Order Now'}
+                  {placingOrder ? t('processing') : t('placeOrderNow')}
                 </button>
               </div>
             </div>
@@ -557,7 +559,7 @@ export const Checkout: React.FC = () => {
 
         {/* Right Column: Checkout Sidebar Summary (displays items, counts and totals) */}
         <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 border-b border-stone-100 dark:border-stone-950 pb-2">Checkout Summary</span>
+          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 border-b border-stone-100 dark:border-stone-950 pb-2">{t('orderSummary')}</span>
           
           {/* Miniature items list */}
           <div className="flex flex-col gap-3 max-h-48 overflow-y-auto no-scrollbar pr-1">
@@ -574,25 +576,25 @@ export const Checkout: React.FC = () => {
 
           <div className="border-t border-stone-100 dark:border-stone-850/30 pt-3 flex flex-col gap-2 text-xs font-sans">
             <div className="flex justify-between text-stone-500 dark:text-stone-400">
-              <span>Subtotal</span>
+              <span>{t('subtotal')}</span>
               <span>₹{subtotal.toLocaleString()}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-emerald-600 font-semibold">
-                <span>Discount</span>
+                <span>{t('couponDiscount')}</span>
                 <span>- ₹{discount.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between text-stone-500 dark:text-stone-400">
-              <span>Delivery Charges</span>
+              <span>{t('shipping')}</span>
               <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}</span>
             </div>
             <div className="flex justify-between text-stone-500 dark:text-stone-400">
-              <span>Estimated Taxes</span>
+              <span>{t('tax')}</span>
               <span>₹{tax.toLocaleString()}</span>
             </div>
             <div className="flex justify-between border-t border-stone-100 dark:border-stone-850/30 pt-3 text-sm font-extrabold text-stone-900 dark:text-stone-100">
-              <span>Grand Total</span>
+              <span>{t('total')}</span>
               <span>₹{grandTotal.toLocaleString()}</span>
             </div>
           </div>

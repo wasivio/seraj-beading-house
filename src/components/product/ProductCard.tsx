@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { getCardUrl } from '../../services/cloudinaryService';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const isFav = isInWishlist(product.id);
   const cardImage = getCardUrl(product.mainImage);
@@ -199,7 +201,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
               onClick={handleAddToCart}
               disabled={product.stockStatus === 'out_of_stock'}
               className="p-2 rounded-xl bg-stone-100 dark:bg-stone-850 text-stone-750 dark:text-stone-300 hover:bg-amber-700 hover:text-stone-100 dark:hover:bg-amber-600 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
-              title="Add to Cart"
+              title={t('addToCart')}
             >
               <ShoppingBag size={14} />
             </button>
@@ -208,7 +210,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
               disabled={product.stockStatus === 'out_of_stock'}
               className="flex-grow py-2 rounded-xl bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 text-xs font-sans font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-center"
             >
-              Buy Now
+              {t('buyNow')}
             </button>
           </div>
         </div>
