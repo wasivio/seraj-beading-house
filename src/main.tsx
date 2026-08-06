@@ -9,16 +9,5 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// Register custom PWA service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('Siraj PWA ServiceWorker registered: ', reg);
-      })
-      .catch(err => {
-        console.error('ServiceWorker registration failed: ', err);
-      });
-  });
-}
+// ServiceWorker registration disabled.
 

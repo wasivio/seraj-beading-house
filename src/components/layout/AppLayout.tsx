@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Header } from '../common/Header';
 import { BottomNav } from '../common/BottomNav';
 import { ToastContainer } from '../common/Toast';
-import { PWAInstallPrompt } from '../common/PWAInstallPrompt';
 import { ScrollToTop } from '../common/ScrollToTop';
 import { SearchModal } from '../common/SearchModal';
 import { PullToRefresh } from '../common/PullToRefresh';
@@ -45,9 +44,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       
       {/* Sticky Bottom Nav on Mobile */}
       <BottomNav />
-
-      {/* PWA Install Promo Drawer */}
-      <PWAInstallPrompt />
 
       {/* Floating Scroll To Top button */}
       <ScrollToTop />
