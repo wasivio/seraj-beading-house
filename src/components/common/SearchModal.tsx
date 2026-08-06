@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Search, Mic, Trash2, Clock, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_PRODUCTS } from '../../utils/mockData';
+import { useProductsQuery } from '../../hooks/useProductsQuery';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface SearchModalProps {
 }
 
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
+  const { data: products = [] } = useProductsQuery();
   const [query, setQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -38,14 +39,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     
     // Find unique matching terms from product names, brands, categories
     const terms = new Set<string>();
-    MOCK_PRODUCTS.forEach(p => {
+    products.forEach(p => {
       if (p.name.toLowerCase().includes(cleanQuery)) terms.add(p.name);
       if (p.brand.toLowerCase().includes(cleanQuery)) terms.add(p.brand);
       if (p.category.toLowerCase().includes(cleanQuery)) terms.add(p.category);
     });
 
     setSuggestions(Array.from(terms).slice(0, 6));
-  }, [query]);
+  }, [query, products]);
 
   const handleSearchSubmit = (searchTerm: string) => {
     if (!searchTerm.trim()) return;

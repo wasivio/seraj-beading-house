@@ -7,7 +7,7 @@ import { FaqSection } from '../components/home/FaqSection';
 import { ProductCard } from '../components/product/ProductCard';
 import { QuickViewModal } from '../components/product/QuickViewModal';
 import type { Product } from '../types';
-import { MOCK_CATEGORIES, WHY_CHOOSE_US, STORE_STATS, BRAND_DATA } from '../utils/mockData';
+import { WHY_CHOOSE_US, STORE_STATS, BRAND_DATA } from '../utils/mockData';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -67,6 +67,13 @@ export const Home: React.FC = () => {
   const featured = products.filter(p => p.isFeatured).slice(0, 4);
   const newArrivals = products.filter(p => p.isNewArrival).slice(0, 4);
 
+  const categoriesList = Array.from(new Set(products.map(p => p.category).filter(Boolean))).map(cat => ({
+    id: cat,
+    name: cat.charAt(0).toUpperCase() + cat.slice(1),
+    slug: cat,
+    image: products.find(p => p.category === cat)?.mainImage || 'https://via.placeholder.com/150'
+  }));
+
   return (
     <div className="flex flex-col gap-10">
       
@@ -74,38 +81,40 @@ export const Home: React.FC = () => {
       <HeroBanner />
 
       {/* 2. Horizontal Categories list */}
-      <section className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-sans font-extrabold text-lg sm:text-xl tracking-tight">Shop By Category</h2>
-          <Link to="/categories" className="text-xs font-bold text-amber-700 dark:text-amber-455 hover:underline flex items-center gap-1">
-            <span>{t('viewAll')}</span>
-            <ArrowRight size={12} />
-          </Link>
-        </div>
+      {categoriesList.length > 0 && (
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-sans font-extrabold text-lg sm:text-xl tracking-tight">Shop By Category</h2>
+            <Link to="/categories" className="text-xs font-bold text-amber-700 dark:text-amber-455 hover:underline flex items-center gap-1">
+              <span>{t('viewAll')}</span>
+              <ArrowRight size={12} />
+            </Link>
+          </div>
 
-        {/* Scrollable container */}
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
-          {MOCK_CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => navigate(`/categories?category=${cat.slug}`)}
-              className="flex-shrink-0 w-24 sm:w-28 flex flex-col items-center gap-2 cursor-pointer group"
-            >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-stone-200/50 dark:border-stone-850/50 group-hover:border-amber-700 dark:group-hover:border-amber-450 transition-colors">
-                <img 
-                  src={cat.image} 
-                  alt={cat.name} 
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+          {/* Scrollable container */}
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
+            {categoriesList.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => navigate(`/categories?category=${cat.slug}`)}
+                className="flex-shrink-0 w-24 sm:w-28 flex flex-col items-center gap-2 cursor-pointer group"
+              >
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-stone-200/50 dark:border-stone-850/50 group-hover:border-amber-700 dark:group-hover:border-amber-450 transition-colors">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <span className="font-sans text-[11px] font-semibold text-stone-700 dark:text-stone-300 text-center line-clamp-1 group-hover:text-amber-750 dark:group-hover:text-amber-400 transition-colors">
+                  {cat.name}
+                </span>
               </div>
-              <span className="font-sans text-[11px] font-semibold text-stone-700 dark:text-stone-300 text-center line-clamp-1 group-hover:text-amber-750 dark:group-hover:text-amber-400 transition-colors">
-                {cat.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 3. Today's Deals (Flash Sale Banner) */}
       {todayDeals.length > 0 && (

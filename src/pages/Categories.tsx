@@ -5,7 +5,6 @@ import { ProductCard } from '../components/product/ProductCard';
 import { QuickViewModal } from '../components/product/QuickViewModal';
 import type { Product } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { MOCK_CATEGORIES } from '../utils/mockData';
 import { useProductsQuery } from '../hooks/useProductsQuery';
 
 export const Categories: React.FC = () => {
@@ -179,6 +178,7 @@ export const Categories: React.FC = () => {
   };
 
   // Extract unique brands, materials, colors, and sizes present in the product database
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
   const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
   const uniqueMaterials = Array.from(new Set(products.map(p => p.material).filter(Boolean)));
   const uniqueColors = Array.from(new Set(products.flatMap(p => p.color || []).filter(Boolean)));
@@ -457,8 +457,8 @@ export const Categories: React.FC = () => {
                     className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-2 text-xs font-semibold focus:outline-none"
                   >
                     <option value="all">All Categories</option>
-                    {MOCK_CATEGORIES.map(c => (
-                      <option key={c.id} value={c.slug}>{c.name}</option>
+                    {uniqueCategories.map((c, idx) => (
+                      <option key={idx} value={c}>{c.toUpperCase()}</option>
                     ))}
                   </select>
                 </div>
