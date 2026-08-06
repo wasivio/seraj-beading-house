@@ -1,7 +1,6 @@
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, setDoc, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, addDoc } from 'firebase/firestore';
 import type { Product, Review, Coupon } from '../types';
-import { MOCK_PRODUCTS, MOCK_REVIEWS, MOCK_COUPONS } from '../utils/mockData';
 
 export const ProductService = {
   async getProducts(): Promise<Product[]> {
@@ -58,31 +57,8 @@ export const ProductService = {
   },
 
   async seedDatabaseIfNeeded() {
-    try {
-      const prodColRef = collection(db, 'products');
-      const prodSnap = await getDocs(prodColRef);
-      if (prodSnap.empty) {
-        console.log('Seeding products, reviews, and coupons to Firestore...');
-        
-        for (const p of MOCK_PRODUCTS) {
-          await setDoc(doc(db, 'products', p.id), p);
-        }
-
-        for (const r of MOCK_REVIEWS) {
-          await setDoc(doc(db, 'reviews', r.id), r);
-        }
-
-        for (const c of MOCK_COUPONS) {
-          await setDoc(doc(db, 'coupons', c.code), c);
-        }
-
-        await setDoc(doc(db, 'settings', 'system'), { seeded: true });
-
-        console.log('Firestore seeded successfully!');
-      }
-    } catch (err) {
-      console.warn('Database seeding skipped or failed. This is expected if the database is already seeded or if permissions are restricted.', err);
-    }
+    // Seeder disabled. We show only actual items present in Firestore.
+    return;
   }
 };
 export type ProductServiceType = typeof ProductService;
