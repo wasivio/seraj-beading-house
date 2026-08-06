@@ -81,6 +81,9 @@ export const FirebaseRepository = {
     getProducts() {
       return ProductService.getProducts();
     },
+    getHeroBanners() {
+      return ProductService.getHeroBanners();
+    },
     getProductById(id: string) {
       return ProductService.getProductById(id);
     },

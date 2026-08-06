@@ -56,6 +56,12 @@ export const ProductService = {
     return c;
   },
 
+  async getHeroBanners(): Promise<any[]> {
+    const colRef = collection(db, 'heroBanners');
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
   async seedDatabaseIfNeeded() {
     // Seeder disabled. We show only actual items present in Firestore.
     return;
