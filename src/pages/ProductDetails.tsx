@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag, Star, Share2, Award, Clock, ArrowLeft, CheckCircle, ThumbsUp, ZoomIn } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Share2, Award, Clock, ArrowLeft, CheckCircle, ThumbsUp, ZoomIn, GitCompare } from 'lucide-react';
 import type { Product, Review } from '../types';
 import { firebaseService } from '../services/firebaseService';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useCompare } from '../context/CompareContext';
 import { useNotifications } from '../context/NotificationContext';
 import { getDetailsUrl, getThumbnailUrl } from '../services/cloudinaryService';
 import { ProductCard } from '../components/product/ProductCard';
 import { Dialog } from '../components/common/Dialog';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useProductDetailsQuery } from '../hooks/useProductDetailsQuery';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { currentUser } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -36,46 +40,47 @@ export const ProductDetails: React.FC = () => {
 
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { showToast } = useNotifications();
+
+  const { data: prod, isLoading: detailsLoading } = useProductDetailsQuery(id);
 
   // Load details
   useEffect(() => {
-    const loadDetails = async () => {
-      if (!id) return;
+    if (detailsLoading) {
       setLoading(true);
-      try {
-        const prod = await firebaseService.firestore.getProductById(id);
-        if (!prod) {
-          navigate('/404');
-          return;
-        }
-        setProduct(prod);
-        setActiveImage(prod.mainImage);
-        
-        // Size / Color pre-selects
-        setSelectedSize(prod.size[0] || '');
-        setSelectedColor(prod.color[0] || '');
-        setQty(1);
+      return;
+    }
+    if (!prod) {
+      if (!detailsLoading) {
+        navigate('/404');
+      }
+      return;
+    }
+    
+    setProduct(prod);
+    setActiveImage(prod.mainImage);
+    setSelectedSize(prod.size[0] || '');
+    setSelectedColor(prod.color[0] || '');
+    setQty(1);
 
-        // Load reviews
-        const revs = await firebaseService.firestore.getReviewsByProductId(id);
+    const loadReviewsAndRelated = async () => {
+      try {
+        const revs = await firebaseService.firestore.getReviewsByProductId(prod.id);
         setReviews(revs);
 
-        // Load related
         const allProds = await firebaseService.firestore.getProducts();
         setRelatedProducts(allProds.filter(p => p.category === prod.category && p.id !== prod.id).slice(0, 4));
 
-        // Save & Load Recently Viewed
         saveRecentlyViewed(prod, allProds);
-
       } catch (err) {
-        console.error('Error loading product details', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    loadDetails();
-  }, [id, navigate]);
+    loadReviewsAndRelated();
+  }, [prod, detailsLoading, id, navigate]);
 
   const saveRecentlyViewed = (currentProd: Product, allProds: Product[]) => {
     const local = localStorage.getItem('siraj_recently_viewed');
@@ -111,6 +116,7 @@ export const ProductDetails: React.FC = () => {
   }
 
   const isFav = isInWishlist(product.id);
+  const isCompared = isInCompare(product.id);
 
   const handleWishlistToggle = () => {
     if (isFav) {
@@ -119,6 +125,16 @@ export const ProductDetails: React.FC = () => {
     } else {
       addToWishlist(product);
       showToast('Added to Wishlist 💖', `"${product.name}" added successfully.`, 'announcement');
+    }
+  };
+
+  const handleCompareToggle = () => {
+    if (isCompared) {
+      removeFromCompare(product.id);
+      showToast('Removed from Compare', `"${product.name}" removed from comparison.`, 'announcement');
+    } else {
+      addToCompare(product);
+      showToast('Added to Compare ⚖️', `"${product.name}" added to comparison.`, 'announcement');
     }
   };
 
@@ -172,9 +188,10 @@ export const ProductDetails: React.FC = () => {
       const added = await firebaseService.firestore.addReview({
         productId: product.id,
         rating: newRating,
-        userName: 'Verified Buyer',
+        userName: currentUser?.name || 'Verified Buyer',
         content: newReviewText,
-        verified: true
+        verified: true,
+        userId: currentUser?.uid || ''
       });
       setReviews(prev => [added, ...prev]);
       setNewReviewText('');
@@ -386,6 +403,13 @@ export const ProductDetails: React.FC = () => {
                 <span>{isFav ? 'In Wishlist' : 'Add to Wishlist'}</span>
               </button>
               <button
+                onClick={handleCompareToggle}
+                className="flex items-center gap-1.5 hover:text-amber-705 cursor-pointer"
+              >
+                <GitCompare size={16} className={isCompared ? 'text-amber-700' : ''} />
+                <span>{isCompared ? 'Compared' : 'Compare'}</span>
+              </button>
+              <button
                 onClick={handleShare}
                 className="flex items-center gap-1.5 hover:text-amber-705 cursor-pointer"
               >
@@ -528,6 +552,66 @@ export const ProductDetails: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* Frequently Bought Together */}
+      {relatedProducts.length > 0 && (
+        <section className="flex flex-col gap-4 pt-6 border-t border-stone-200/50 dark:border-stone-850/50">
+          <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider">Frequently Bought Together</h3>
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
+              {/* Item 1 */}
+              <div className="flex items-center gap-3">
+                <img 
+                  src={getThumbnailUrl(product.mainImage)} 
+                  alt={product.name} 
+                  className="w-14 h-14 rounded-xl object-cover border border-stone-100 dark:border-stone-800"
+                />
+                <div className="flex flex-col text-left">
+                  <span className="font-bold text-xs line-clamp-1 max-w-[150px]">{product.name}</span>
+                  <span className="text-[10px] text-stone-400">₹{product.price.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              {/* Plus Sign */}
+              <span className="text-stone-400 font-extrabold text-lg">+</span>
+
+              {/* Item 2 */}
+              <div className="flex items-center gap-3">
+                <img 
+                  src={getThumbnailUrl(relatedProducts[0].mainImage)} 
+                  alt={relatedProducts[0].name} 
+                  className="w-14 h-14 rounded-xl object-cover border border-stone-100 dark:border-stone-800"
+                />
+                <div className="flex flex-col text-left">
+                  <span className="font-bold text-xs line-clamp-1 max-w-[150px]">{relatedProducts[0].name}</span>
+                  <span className="text-[10px] text-stone-400">₹{relatedProducts[0].price.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Price Bundle & Button */}
+            <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-stone-100 dark:border-stone-850 pt-4 md:pt-0 md:pl-6 w-full md:w-auto justify-between md:justify-start">
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider">Total Price</span>
+                <span className="font-sans font-extrabold text-base text-stone-900 dark:text-stone-100">
+                  ₹{(product.price + relatedProducts[0].price).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  addToCart(product, 1, selectedSize, selectedColor);
+                  addToCart(relatedProducts[0], 1, relatedProducts[0].size[0] || '', relatedProducts[0].color[0] || '');
+                  showToast('Bundle Added! 🛒', 'Both items successfully added to your comfort bag.', 'order');
+                }}
+                className="bg-luxury-gold hover:opacity-90 active:scale-95 text-stone-100 font-sans font-bold text-xs py-2.5 px-5 rounded-xl cursor-pointer shadow-md"
+              >
+                Add Bundle to Cart
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Related Products list */}
       {relatedProducts.length > 0 && (

@@ -78,10 +78,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setActiveToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  const requestNotificationPermission = async () => {
+  const requestNotificationPermission = async (): Promise<'granted' | 'denied'> => {
     const res = await firebaseService.fcm.requestPermission();
     syncNotifications();
-    return res;
+    return res === 'granted' ? 'granted' : 'denied';
   };
 
   const saveFCMConfig = (config: FCMConfig) => {

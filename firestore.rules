@@ -1,0 +1,220 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // ROLE-BASED ACCESS CONTROL HELPERS
+    // ==========================================
+    
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isOwner() {
+      return request.auth != null && getRole() == 'owner';
+    }
+    
+    function isSuperAdmin() {
+      return request.auth != null && getRole() == 'superAdmin';
+    }
+    
+    function isAdminRole() {
+      return request.auth != null && getRole() in ['owner', 'superAdmin', 'admin'];
+    }
+    
+    function isManagerRole() {
+      return request.auth != null && getRole() in ['owner', 'superAdmin', 'admin', 'manager'];
+    }
+    
+    function isStaffRole() {
+      return request.auth != null && getRole() in ['owner', 'superAdmin', 'admin', 'manager', 'staff'];
+    }
+
+    // BOOTSTRAP SEEDING HELPER
+    // Allows writes to catalog setup only if database settings bootstrap document has not been seeded yet.
+    function isSystemNotSeeded() {
+      return !exists(/databases/$(database)/documents/settings/system) 
+        || get(/databases/$(database)/documents/settings/system).data.seeded != true;
+    }
+
+    // DENY ALL BY DEFAULT
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // USER PROFILES & ROLES
+    // ==========================================
+    match /users/{userId} {
+      function validateUserFields() {
+        return request.resource.data.keys().hasAll(['uid', 'displayName', 'status'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.status in ['active', 'suspended', 'inactive'];
+      }
+      
+      allow create: if request.auth != null && request.auth.uid == userId 
+                    && (request.resource.data.role == 'customer' || request.resource.data.role == 'guest')
+                    && validateUserFields();
+      allow read: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+      allow update: if request.auth != null && (
+        request.auth.uid == userId && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+        ) || isSuperAdmin() || isOwner()
+      );
+      allow delete: if request.auth != null && isOwner();
+    }
+
+    // ==========================================
+    // PRODUCT CATALOG
+    // ==========================================
+    match /products/{productId} {
+      function validateProductFields() {
+        return request.resource.data.keys().hasAll(['id', 'name', 'price', 'category', 'mainImage'])
+          && request.resource.data.price is number
+          && request.resource.data.price >= 0;
+      }
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole() && validateProductFields()) || isSystemNotSeeded();
+    }
+
+    // ==========================================
+    // STATIC / COMMON COLLECTIONS
+    // ==========================================
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+    match /brands/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+    match /offers/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+    match /heroBanners/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+    match /faqs/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+    match /blogs/{id} {
+      allow read: if true;
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+
+    // ==========================================
+    // VALIDATED ACTIVE COUPONS
+    // ==========================================
+    match /coupons/{couponCode} {
+      allow read: if request.auth != null && (isAdminRole() || resource.data.expiryDate >= request.time);
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+
+    // ==========================================
+    // CUSTOMER PRIVATE DATA (OWNER ONLY)
+    // ==========================================
+    match /addresses/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+    }
+
+    match /cart/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+    }
+
+    match /wishlist/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+    }
+
+    // ==========================================
+    // ORDERS
+    // ==========================================
+    match /orders/{orderId} {
+      allow create: if request.auth != null 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if request.auth != null 
+                  && (resource.data.userId == request.auth.uid || isStaffRole());
+      allow update: if request.auth != null 
+                    && (
+                      isStaffRole() || 
+                      (resource.data.userId == request.auth.uid 
+                       && request.resource.data.userId == request.auth.uid
+                       && resource.data.status in ['pending', 'confirmed']
+                       && request.resource.data.status == 'cancelled'
+                       && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['grandTotal', 'items', 'subtotal'])))
+                    );
+      allow delete: if request.auth != null && isOwner();
+    }
+
+    // ==========================================
+    // REVIEWS
+    // ==========================================
+    match /reviews/{reviewId} {
+      allow read: if resource == null || resource.data.approved == true || (request.auth != null && isStaffRole());
+      allow create: if (request.auth != null 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.approved == false) || isSystemNotSeeded();
+      allow update: if request.auth != null 
+                    && (
+                      isStaffRole() ||
+                      (resource.data.userId == request.auth.uid 
+                       && resource.data.approved == false
+                       && request.resource.data.userId == request.auth.uid
+                       && request.resource.data.approved == false
+                      ) ||
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reported']))
+                    );
+      allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || isStaffRole());
+    }
+
+    // ==========================================
+    // NOTIFICATIONS & FCM TOKENS
+    // ==========================================
+    match /notifications/{userId} {
+      allow read, update: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+      allow create, delete: if request.auth != null && isStaffRole();
+    }
+
+    match /fcmTokens/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isStaffRole());
+    }
+
+    // ==========================================
+    // SYSTEM SETTINGS
+    // ==========================================
+    match /settings/{settingId} {
+      allow read: if settingId == 'public' || settingId == 'general' || settingId == 'system'
+                  || (resource != null && resource.data.isPublic == true) 
+                  || (request.auth != null && isAdminRole());
+      allow write: if (request.auth != null && isAdminRole()) || isSystemNotSeeded();
+    }
+
+    // ==========================================
+    // ADMIN-ONLY COLLECTIONS
+    // ==========================================
+    match /inventory/{id} {
+      allow read, write: if request.auth != null && isStaffRole();
+    }
+    match /reports/{id} {
+      allow read, write: if request.auth != null && isStaffRole();
+    }
+    match /analytics/{id} {
+      allow read, write: if request.auth != null && isStaffRole();
+    }
+    match /employees/{id} {
+      allow read, write: if request.auth != null && (isOwner() || isSuperAdmin());
+    }
+    match /suppliers/{id} {
+      allow read, write: if request.auth != null && isAdminRole();
+    }
+    match /activityLogs/{id} {
+      allow read, write: if request.auth != null && isStaffRole();
+    }
+    match /systemSettings/{id} {
+      allow read, write: if request.auth != null && isAdminRole();
+    }
+  }
+}

@@ -21,7 +21,12 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
   const { language, setLanguage, t } = useLanguage();
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [avatarError, setAvatarError] = useState(false);
   const selectedLocation = t('location');
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [currentUser?.photoURL]);
 
   useEffect(() => {
     const goOnline = () => setIsOffline(false);
@@ -168,11 +173,12 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
               className="p-2 text-stone-700 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400 transition-colors tap-highlight-none"
               aria-label="Profile"
             >
-              {isAuthenticated && currentUser?.photoURL ? (
+              {isAuthenticated && currentUser?.photoURL && !avatarError ? (
                 <img 
                   src={currentUser.photoURL} 
                   alt="Profile" 
                   className="w-6 h-6 rounded-full border border-amber-700/30 object-cover" 
+                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <User size={20} />

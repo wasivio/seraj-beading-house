@@ -6,6 +6,7 @@ import { PWAInstallPrompt } from '../common/PWAInstallPrompt';
 import { ScrollToTop } from '../common/ScrollToTop';
 import { SearchModal } from '../common/SearchModal';
 import { PullToRefresh } from '../common/PullToRefresh';
+import { CompareFloatingBar } from '../product/CompareFloatingBar';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -50,6 +51,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* Floating Scroll To Top button */}
       <ScrollToTop />
+
+      {/* Product Comparison floating panel */}
+      <CompareFloatingBar />
     </div>
   );
 };

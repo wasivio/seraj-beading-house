@@ -48,6 +48,7 @@ export interface Review {
   likes: number;
   reported: boolean;
   photos?: string[];
+  userId?: string;
 }
 
 export interface CartItem {

@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { firebaseService } from '../services/firebaseService';
+import { auth } from '../firebase';
+import { getRedirectResult } from 'firebase/auth';
+import { AuthService } from '../services/AuthService';
 
 interface User {
+  uid?: string;
   name: string;
   email: string;
   phone: string;
@@ -12,9 +16,9 @@ interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginWithGoogle: () => Promise<User>;
-  loginWithEmail: (email: string) => Promise<User>;
-  loginWithPhone: (phone: string, otp: string) => Promise<User>;
+  loginWithGoogle: () => Promise<User | null>;
+  loginWithEmail: (email: string) => Promise<User | null>;
+  loginWithPhone: (phone: string, otp: string) => Promise<User | null>;
   logout: () => void;
 }
 
@@ -25,7 +29,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Listen to mock Firebase auth state updates
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const syncedUser = await AuthService.handleGoogleLogin();
+          if (syncedUser) {
+            setCurrentUser({
+              uid: syncedUser.uid,
+              name: syncedUser.displayName || 'Customer',
+              email: syncedUser.email || '',
+              phone: syncedUser.phoneNumber || '',
+              photoURL: syncedUser.photoURL || ''
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error getting Google redirect login result:', err);
+      }
+    };
+
+    checkRedirectResult();
+
     const unsubscribe = firebaseService.auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setIsLoading(false);

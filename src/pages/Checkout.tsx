@@ -146,6 +146,8 @@ export const Checkout: React.FC = () => {
     setPlacingOrder(true);
     try {
       const order = await firebaseService.firestore.createOrder({
+        orderNumber: `SBH-${Math.floor(100000 + Math.random() * 900000)}`,
+        status: 'pending',
         items: cartItems,
         subtotal,
         shippingCharge,
@@ -159,7 +161,16 @@ export const Checkout: React.FC = () => {
           date: deliveryDate,
           time: deliveryTime
         },
-        estimatedDelivery: new Date(Date.now() + 3600000 * 24 * 3).toLocaleDateString() // 3 days
+        trackingTimeline: [
+          {
+            status: 'pending',
+            title: 'Order Placed',
+            description: 'Your order was submitted successfully.',
+            date: new Date().toISOString(),
+            isCompleted: true
+          }
+        ],
+        estimatedDelivery: new Date(Date.now() + 3600000 * 24 * 3).toISOString()
       });
 
       // Clear local checkout cart

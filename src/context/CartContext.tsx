@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { CartItem, Product, Coupon } from '../types';
 import { useAuth } from './AuthContext';
 import { firebaseService } from '../services/firebaseService';
+import { auth } from '../firebase';
+import { CartService } from '../services/CartService';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -65,37 +67,38 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync/Restore cart automatically after successful login
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      // In a real application, we would fetch the user's remote cart from Firestore
-      // and merge it with the local Guest Cart.
-      // Rule 8: "Customer should never lose cart after login. Restore Cart automatically."
-      // Since our local cart is stored in localStorage, it naturally persists.
-      // We also save it to a simulated user database slot.
-      const savedUserCart = localStorage.getItem(`siraj_cart_${currentUser.email}`);
-      if (savedUserCart) {
-        const remoteCart = JSON.parse(savedUserCart) as CartItem[];
-        // Merge guest cart with user cart, matching product ids, sizes and colors
-        setCartItems(prevGuestCart => {
-          const merged = [...prevGuestCart];
-          remoteCart.forEach(remoteItem => {
-            const exists = merged.find(i => i.id === remoteItem.id);
-            if (exists) {
-              exists.quantity = Math.max(exists.quantity, remoteItem.quantity);
-            } else {
-              merged.push(remoteItem);
-            }
-          });
-          return merged;
-        });
+    const loadAndSyncCart = async () => {
+      if (isAuthenticated && currentUser) {
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+
+        const local = localStorage.getItem('siraj_cart');
+        const localItems: CartItem[] = local ? JSON.parse(local) : [];
+
+        try {
+          const merged = await CartService.mergeLocalCart(uid, localItems);
+          setCartItems(merged);
+        } catch (e) {
+          console.error('Error merging local cart with Firestore:', e);
+        }
       }
-    }
+    };
+    loadAndSyncCart();
   }, [isAuthenticated, currentUser]);
 
-  // Keep a copy of the current cart saved under the user's specific key if logged in
+  // Keep a copy of the current cart saved to Firestore if logged in
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      localStorage.setItem(`siraj_cart_${currentUser.email}`, JSON.stringify(cartItems));
-    }
+    const syncToFirestore = async () => {
+      if (isAuthenticated && currentUser) {
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await CartService.saveCart(uid, cartItems).catch(e => {
+            console.error('Error saving cart to Firestore:', e);
+          });
+        }
+      }
+    };
+    syncToFirestore();
   }, [cartItems, isAuthenticated, currentUser]);
 
   const addToCart = (product: Product, quantity = 1, size = '', color = '') => {

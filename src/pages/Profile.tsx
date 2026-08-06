@@ -29,9 +29,14 @@ export const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [avatarError, setAvatarError] = useState(false);
 
   // Default address preview state
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [currentUser?.photoURL]);
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -262,7 +267,7 @@ export const Profile: React.FC = () => {
                 disabled={authLoading}
                 className="w-full bg-stone-900 hover:bg-stone-950 dark:bg-stone-800 dark:hover:bg-stone-850 text-stone-100 border border-stone-800 py-3 rounded-xl font-sans font-bold text-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                {authLoading ? 'Redirecting...' : 'Sign In with Google G'}
+                {authLoading ? 'Connecting...' : 'Continue with Google'}
               </button>
             </div>
           )}
@@ -280,8 +285,13 @@ export const Profile: React.FC = () => {
       <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-14 h-14 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden flex items-center justify-center border-2 border-amber-700/20">
-            {currentUser.photoURL ? (
-              <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+            {currentUser.photoURL && !avatarError ? (
+              <img 
+                src={currentUser.photoURL} 
+                alt="Avatar" 
+                className="w-full h-full object-cover" 
+                onError={() => setAvatarError(true)}
+              />
             ) : (
               <User size={24} className="text-stone-400" />
             )}

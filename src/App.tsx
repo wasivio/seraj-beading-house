@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { CompareProvider } from './context/CompareContext';
 
 // Layout
 import { AppLayout } from './components/layout/AppLayout';
@@ -46,24 +47,26 @@ const App: React.FC = () => {
               <CartProvider>
                 <WishlistProvider>
                   <NotificationProvider>
-                    <AppLayout>
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/categories" element={<Categories />} />
-                        <Route path="/product/:id" element={<ProductDetails />} />
-                        <Route path="/cart" element={<Cart />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/order-success" element={<OrderSuccess />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/profile/orders" element={<MyOrders />} />
-                        <Route path="/wishlist" element={<Wishlist />} />
-                        <Route path="/notifications" element={<Notifications />} />
-                        <Route path="/help" element={<HelpCenter />} />
-                        <Route path="/contact" element={<HelpCenter />} />
-                        <Route path="/about" element={<HelpCenter />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </AppLayout>
+                    <CompareProvider>
+                      <AppLayout>
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/categories" element={<Categories />} />
+                          <Route path="/product/:id" element={<ProductDetails />} />
+                          <Route path="/cart" element={<Cart />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/order-success" element={<OrderSuccess />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/profile/orders" element={<MyOrders />} />
+                          <Route path="/wishlist" element={<Wishlist />} />
+                          <Route path="/notifications" element={<Notifications />} />
+                          <Route path="/help" element={<HelpCenter />} />
+                          <Route path="/contact" element={<HelpCenter />} />
+                          <Route path="/about" element={<HelpCenter />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </AppLayout>
+                    </CompareProvider>
                   </NotificationProvider>
                 </WishlistProvider>
               </CartProvider>

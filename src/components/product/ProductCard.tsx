@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag, Eye, Share2, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Eye, Share2, Star, GitCompare } from 'lucide-react';
 import type { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useCompare } from '../../context/CompareContext';
 import { getCardUrl } from '../../services/cloudinaryService';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -16,12 +17,26 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   const isFav = isInWishlist(product.id);
+  const isCompared = isInCompare(product.id);
   const cardImage = getCardUrl(product.mainImage);
+
+  const handleCompareToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isCompared) {
+      removeFromCompare(product.id);
+      showToast('Removed from Compare', `"${product.name}" removed from comparison.`, 'announcement');
+    } else {
+      addToCompare(product);
+      showToast('Added to Compare ⚖️', `"${product.name}" added to comparison.`, 'announcement');
+    }
+  };
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -114,6 +129,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           aria-label="Add to Wishlist"
         >
           <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
+        </button>
+
+        {/* Compare Icon */}
+        <button
+          onClick={handleCompareToggle}
+          className={`absolute top-11 right-2 p-2 rounded-full shadow-md z-10 cursor-pointer backdrop-blur-md transition-all ${
+            isCompared 
+              ? 'bg-amber-700/90 text-stone-100 scale-105' 
+              : 'bg-white/80 dark:bg-stone-900/80 text-stone-700 dark:text-stone-305 hover:bg-stone-50'
+          }`}
+          aria-label="Compare Product"
+          title="Compare Product"
+        >
+          <GitCompare size={16} />
         </button>
 
         {/* Action Tray Overlay on Hover (Desktop only) */}

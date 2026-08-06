@@ -7,13 +7,15 @@ import { FaqSection } from '../components/home/FaqSection';
 import { ProductCard } from '../components/product/ProductCard';
 import { QuickViewModal } from '../components/product/QuickViewModal';
 import type { Product } from '../types';
-import { firebaseService } from '../services/firebaseService';
 import { MOCK_CATEGORIES, WHY_CHOOSE_US, STORE_STATS, BRAND_DATA } from '../utils/mockData';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 
+import { useProductsQuery } from '../hooks/useProductsQuery';
+
 export const Home: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data: products = [], refetch } = useProductsQuery();
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -23,20 +25,23 @@ export const Home: React.FC = () => {
   const { showToast } = useNotifications();
   const { t } = useLanguage();
 
-  const fetchProducts = async () => {
-    try {
-      const data = await firebaseService.firestore.getProducts();
-      setProducts(data);
-    } catch (e) {
-      console.error(e);
+  useEffect(() => {
+    if (products.length > 0) {
+      const local = localStorage.getItem('siraj_recently_viewed');
+      if (local) {
+        const ids: string[] = JSON.parse(local);
+        const recents = ids
+          .map(rid => products.find(p => p.id === rid))
+          .filter((p): p is Product => !!p);
+        setRecentlyViewed(recents);
+      }
     }
-  };
+  }, [products]);
 
   useEffect(() => {
-    fetchProducts();
-    // Listening to global refresh triggers from Pull to Refresh
-    window.addEventListener('app_refresh_trigger', fetchProducts);
-    return () => window.removeEventListener('app_refresh_trigger', fetchProducts);
+    const handleRefresh = () => refetch();
+    window.addEventListener('app_refresh_trigger', handleRefresh);
+    return () => window.removeEventListener('app_refresh_trigger', handleRefresh);
   }, []);
 
   const handleQuickView = (product: Product) => {
@@ -59,6 +64,8 @@ export const Home: React.FC = () => {
   const trending = products.filter(p => p.isTrending).slice(0, 4);
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
   const todayDeals = products.filter(p => p.isTodayDeal).slice(0, 4);
+  const featured = products.filter(p => p.isFeatured).slice(0, 4);
+  const newArrivals = products.filter(p => p.isNewArrival).slice(0, 4);
 
   return (
     <div className="flex flex-col gap-10">
@@ -127,6 +134,28 @@ export const Home: React.FC = () => {
         </section>
       )}
 
+      {/* Featured Products */}
+      {featured.length > 0 && (
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Selected Comforts</span>
+              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">Featured Products</h2>
+            </div>
+            <Link to="/categories?filter=featured" className="text-xs font-bold text-amber-700 dark:text-amber-450 hover:underline flex items-center gap-1">
+              <span>{t('viewAll')}</span>
+              <ArrowRight size={12} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {featured.map((prod) => (
+              <ProductCard key={prod.id} product={prod} onQuickView={handleQuickView} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 4. Trending collections */}
       {trending.length > 0 && (
         <section className="w-full">
@@ -143,6 +172,28 @@ export const Home: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {trending.map((prod) => (
+              <ProductCard key={prod.id} product={prod} onQuickView={handleQuickView} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* New Arrivals */}
+      {newArrivals.length > 0 && (
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Fresh Stock</span>
+              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">New Arrivals</h2>
+            </div>
+            <Link to="/categories?filter=newest" className="text-xs font-bold text-amber-700 dark:text-amber-450 hover:underline flex items-center gap-1">
+              <span>{t('viewAll')}</span>
+              <ArrowRight size={12} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {newArrivals.map((prod) => (
               <ProductCard key={prod.id} product={prod} onQuickView={handleQuickView} />
             ))}
           </div>
@@ -207,6 +258,24 @@ export const Home: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Recently Viewed */}
+      {recentlyViewed.length > 0 && (
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Your History</span>
+              <h2 className="font-sans font-extrabold text-lg sm:text-xl mt-0.5 tracking-tight">Recently Viewed Products</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {recentlyViewed.map((prod) => (
+              <ProductCard key={prod.id} product={prod} onQuickView={handleQuickView} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 8. Why Choose Us */}
       <section className="w-full">

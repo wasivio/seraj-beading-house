@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Product } from '../types';
 import { useCart } from './CartContext';
+import { useAuth } from './AuthContext';
+import { auth } from '../firebase';
+import { WishlistService } from '../services/WishlistService';
 
 interface WishlistContextType {
   wishlist: Product[];
@@ -14,6 +17,8 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { addToCart } = useCart();
+  const { currentUser, isAuthenticated } = useAuth();
+  
   const [wishlist, setWishlist] = useState<Product[]>(() => {
     const local = localStorage.getItem('siraj_wishlist');
     return local ? JSON.parse(local) : [];
@@ -22,6 +27,42 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem('siraj_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
+
+  // Sync wishlist from Firestore upon login
+  useEffect(() => {
+    const loadAndSyncWishlist = async () => {
+      if (isAuthenticated && currentUser) {
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+
+        const local = localStorage.getItem('siraj_wishlist');
+        const localItems: Product[] = local ? JSON.parse(local) : [];
+
+        try {
+          const synced = await WishlistService.syncLocalWishlist(uid, localItems);
+          setWishlist(synced);
+        } catch (e) {
+          console.error('Error syncing local wishlist with Firestore:', e);
+        }
+      }
+    };
+    loadAndSyncWishlist();
+  }, [isAuthenticated, currentUser]);
+
+  // Keep Firestore copy updated
+  useEffect(() => {
+    const syncToFirestore = async () => {
+      if (isAuthenticated && currentUser) {
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await WishlistService.saveWishlist(uid, wishlist).catch(e => {
+            console.error('Error saving wishlist to Firestore:', e);
+          });
+        }
+      }
+    };
+    syncToFirestore();
+  }, [wishlist, isAuthenticated, currentUser]);
 
   const addToWishlist = (product: Product) => {
     setWishlist(prev => {
