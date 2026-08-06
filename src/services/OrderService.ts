@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, addDoc, query, where, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, query, where, updateDoc, onSnapshot } from 'firebase/firestore';
 import type { Order } from '../types';
 
 export const OrderService = {
@@ -43,6 +43,25 @@ export const OrderService = {
   async updateOrderStatus(orderId: string, status: Order['status'], trackingTimeline: Order['trackingTimeline']): Promise<void> {
     const docRef = doc(db, 'orders', orderId);
     await updateDoc(docRef, { status, trackingTimeline });
+  },
+
+  subscribeOrders(userId: string, callback: (orders: Order[]) => void): () => void {
+    const colRef = collection(db, 'orders');
+    const q = query(colRef, where('userId', '==', userId));
+    return onSnapshot(q, (snap) => {
+      const list = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          createdAt: data.createdAt || new Date().toISOString()
+        } as Order;
+      });
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      callback(list);
+    }, (error) => {
+      console.error("Error subscribing to orders:", error);
+    });
   }
 };
 export type OrderServiceType = typeof OrderService;

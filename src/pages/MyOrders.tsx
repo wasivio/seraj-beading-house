@@ -10,24 +10,13 @@ export const MyOrders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
-  const loadOrders = async () => {
-    setLoading(true);
-    try {
-      const data = await firebaseService.firestore.getOrders();
-      setOrders(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadOrders();
-    
-    // Listen to mock Firebase background scheduler triggers
-    window.addEventListener('order_status_sync', loadOrders);
-    return () => window.removeEventListener('order_status_sync', loadOrders);
+    setLoading(true);
+    const unsubscribe = firebaseService.firestore.subscribeOrders((data) => {
+      setOrders(data);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   const toggleExpand = (id: string) => {

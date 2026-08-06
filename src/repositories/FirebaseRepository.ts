@@ -132,6 +132,14 @@ export const FirebaseRepository = {
       if (!user) return [];
       return OrderService.getOrders(user.uid);
     },
+    subscribeOrders(callback: (orders: Order[]) => void): () => void {
+      const user = auth.currentUser;
+      if (!user) {
+        callback([]);
+        return () => {};
+      }
+      return OrderService.subscribeOrders(user.uid, callback);
+    },
     async getOrderById(orderId: string) {
       return OrderService.getOrderById(orderId);
     },
