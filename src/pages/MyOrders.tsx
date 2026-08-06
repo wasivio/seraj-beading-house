@@ -4,20 +4,28 @@ import { ShoppingBag, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { firebaseService } from '../services/firebaseService';
 import type { Order } from '../types';
 import { getThumbnailUrl } from '../services/cloudinaryService';
+import { useAuth } from '../context/AuthContext';
 
 export const MyOrders: React.FC = () => {
+  const { currentUser, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const unsubscribe = firebaseService.firestore.subscribeOrders((data) => {
       setOrders(data);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [currentUser?.uid, isAuthenticated]);
 
   const toggleExpand = (id: string) => {
     setExpandedOrderId(prev => (prev === id ? null : id));
