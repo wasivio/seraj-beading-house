@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, addDoc, deleteDoc } from 'firebase/firestore';
 import type { Product, Review, Coupon } from '../types';
 
 export const ProductService = {
@@ -59,6 +59,28 @@ export const ProductService = {
   async seedDatabaseIfNeeded() {
     // Seeder disabled. We show only actual items present in Firestore.
     return;
+  },
+
+  async clearMockData(): Promise<void> {
+    const prodCol = collection(db, 'products');
+    const prodSnap = await getDocs(prodCol);
+    for (const d of prodSnap.docs) {
+      await deleteDoc(doc(db, 'products', d.id));
+    }
+
+    const reviewCol = collection(db, 'reviews');
+    const reviewSnap = await getDocs(reviewCol);
+    for (const d of reviewSnap.docs) {
+      await deleteDoc(doc(db, 'reviews', d.id));
+    }
+
+    const couponCol = collection(db, 'coupons');
+    const couponSnap = await getDocs(couponCol);
+    for (const d of couponSnap.docs) {
+      await deleteDoc(doc(db, 'coupons', d.id));
+    }
+
+    await deleteDoc(doc(db, 'settings', 'system')).catch(() => {});
   }
 };
 export type ProductServiceType = typeof ProductService;

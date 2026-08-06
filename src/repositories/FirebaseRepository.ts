@@ -98,6 +98,9 @@ export const FirebaseRepository = {
     validateCoupon(code: string, subtotal: number) {
       return ProductService.validateCoupon(code, subtotal);
     },
+    clearMockData() {
+      return ProductService.clearMockData();
+    },
 
     async getAddresses() {
       const user = auth.currentUser;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, Lock, ChevronRight } from 'lucide-react';
+import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, Lock, ChevronRight, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
@@ -33,6 +33,25 @@ export const Profile: React.FC = () => {
 
   // Default address preview state
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+
+  const handleClearDatabase = async () => {
+    if (!window.confirm('WARNING: This will permanently delete all mock/demo products, reviews, and coupons from your Firestore database. This action cannot be undone.\n\nAre you sure you want to proceed?')) {
+      return;
+    }
+    
+    setIsClearing(true);
+    try {
+      await firebaseService.firestore.clearMockData();
+      alert('Firestore database cleared successfully! All mock products, reviews, and coupons have been deleted. You can now add real ones from the Admin panel.');
+      window.dispatchEvent(new CustomEvent('app_refresh_trigger'));
+      window.location.reload();
+    } catch (err: any) {
+      alert(`Error clearing database: ${err.message || err}`);
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   useEffect(() => {
     setAvatarError(false);
@@ -302,13 +321,23 @@ export const Profile: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={logout}
-          className="p-2.5 rounded-full border border-stone-200 dark:border-stone-850 hover:bg-red-50 hover:text-red-500 text-stone-400 transition-all cursor-pointer"
-          title="Sign Out"
-        >
-          <LogOut size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleClearDatabase}
+            disabled={isClearing}
+            className="p-2.5 rounded-full border border-stone-200 dark:border-stone-850 hover:bg-amber-50 hover:text-amber-700 text-stone-400 transition-all cursor-pointer disabled:opacity-50"
+            title="Delete Mock/Fake Data from Firestore"
+          >
+            <Trash2 size={16} className={isClearing ? 'animate-pulse' : ''} />
+          </button>
+          <button
+            onClick={logout}
+            className="p-2.5 rounded-full border border-stone-200 dark:border-stone-850 hover:bg-red-50 hover:text-red-500 text-stone-400 transition-all cursor-pointer"
+            title="Sign Out"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Account Control panels */}
