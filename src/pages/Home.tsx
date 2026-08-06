@@ -12,9 +12,14 @@ import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 
 import { useProductsQuery } from '../hooks/useProductsQuery';
+import { useCategoriesQuery } from '../hooks/useCategoriesQuery';
+import { useBrandsQuery } from '../hooks/useBrandsQuery';
 
 export const Home: React.FC = () => {
-  const { data: products = [], refetch } = useProductsQuery();
+  const { data: products = [], refetch: refetchProducts } = useProductsQuery();
+  const { data: dbCategories = [], refetch: refetchCategories } = useCategoriesQuery();
+  const { data: dbBrands = [], refetch: refetchBrands } = useBrandsQuery();
+
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -39,10 +44,14 @@ export const Home: React.FC = () => {
   }, [products]);
 
   useEffect(() => {
-    const handleRefresh = () => refetch();
+    const handleRefresh = () => {
+      refetchProducts();
+      refetchCategories();
+      refetchBrands();
+    };
     window.addEventListener('app_refresh_trigger', handleRefresh);
     return () => window.removeEventListener('app_refresh_trigger', handleRefresh);
-  }, []);
+  }, [refetchProducts, refetchCategories, refetchBrands]);
 
   const handleQuickView = (product: Product) => {
     setSelectedProduct(product);
@@ -60,17 +69,32 @@ export const Home: React.FC = () => {
     setEmail('');
   };
 
-  // Sections filtering
-  const trending = products.filter(p => p.isTrending).slice(0, 4);
-  const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
-  const todayDeals = products.filter(p => p.isTodayDeal).slice(0, 4);
-  const featured = products.filter(p => p.isFeatured).slice(0, 4);
-  const newArrivals = products.filter(p => p.isNewArrival).slice(0, 4);
+  // Flexible Sections Filtering with Automatic Fallbacks
+  const trendingFiltered = products.filter(p => p.isTrending === true || (p as any).trending === true || String((p as any).isTrending) === 'true' || String((p as any).trending) === 'true');
+  const trending = trendingFiltered.length > 0 ? trendingFiltered.slice(0, 4) : products.slice(0, 4);
 
-  const categoriesList = Array.from(new Set(products.map(p => p.category).filter(Boolean))).map(cat => ({
-    id: cat,
-    name: cat.charAt(0).toUpperCase() + cat.slice(1),
-    slug: cat,
+  const bestSellersFiltered = products.filter(p => p.isBestSeller === true || (p as any).bestSeller === true || String((p as any).isBestSeller) === 'true' || String((p as any).bestSeller) === 'true' || (p as any).bestseller === true);
+  const bestSellers = bestSellersFiltered.length > 0 ? bestSellersFiltered.slice(0, 4) : products.slice(0, 4);
+
+  const todayDealsFiltered = products.filter(p => p.isTodayDeal === true || (p as any).todayDeal === true || String((p as any).isTodayDeal) === 'true' || String((p as any).todayDeal) === 'true' || (p as any).onSale === true);
+  const todayDeals = todayDealsFiltered.length > 0 ? todayDealsFiltered.slice(0, 4) : products.slice(0, 4);
+
+  const featuredFiltered = products.filter(p => p.isFeatured === true || (p as any).featured === true || String((p as any).isFeatured) === 'true' || String((p as any).featured) === 'true');
+  const featured = featuredFiltered.length > 0 ? featuredFiltered.slice(0, 4) : products.slice(0, 4);
+
+  const newArrivalsFiltered = products.filter(p => p.isNewArrival === true || (p as any).newArrival === true || String((p as any).isNewArrival) === 'true' || String((p as any).newArrival) === 'true');
+  const newArrivals = newArrivalsFiltered.length > 0 ? newArrivalsFiltered.slice(0, 4) : products.slice().reverse().slice(0, 4);
+
+  // Dynamic Categories shelf: Load from direct categories collection, fallback to derived categories
+  const categoriesList = dbCategories.length > 0 ? dbCategories.map(c => ({
+    id: c.id,
+    name: c.name || '',
+    slug: c.slug || c.id,
+    image: c.image || c.imageUrl || 'https://via.placeholder.com/150'
+  })) : Array.from(new Set(products.map(p => p.category?.trim()).filter(Boolean))).map(cat => ({
+    id: cat.toLowerCase(),
+    name: cat,
+    slug: cat.toLowerCase(),
     image: products.find(p => p.category === cat)?.mainImage || 'https://via.placeholder.com/150'
   }));
 
@@ -319,15 +343,25 @@ export const Home: React.FC = () => {
           <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Shop By Brand</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 opacity-70 dark:opacity-80">
-          {BRAND_DATA.map((br, idx) => (
-            <span 
-              key={idx} 
-              onClick={() => navigate(`/categories?brand=${encodeURIComponent(br.name)}`)}
-              className="font-sans text-sm sm:text-base font-extrabold tracking-widest text-stone-600 dark:text-stone-400 cursor-pointer hover:text-amber-700 hover:opacity-100 transition-all"
-            >
-              {br.name.toUpperCase()}
-            </span>
-          ))}
+          {(() => {
+            const brandsList = dbBrands.length > 0 ? dbBrands.map(b => ({
+              name: b.name || b.id
+            })) : Array.from(new Set(products.map(p => p.brand).filter(Boolean))).map(brand => ({
+              name: brand
+            }));
+
+            const finalBrandsList = brandsList.length > 0 ? brandsList : BRAND_DATA.map(b => ({ name: b.name }));
+
+            return finalBrandsList.map((br, idx) => (
+              <span 
+                key={idx} 
+                onClick={() => navigate(`/categories?brand=${encodeURIComponent(br.name)}`)}
+                className="font-sans text-sm sm:text-base font-extrabold tracking-widest text-stone-600 dark:text-stone-400 cursor-pointer hover:text-amber-700 hover:opacity-100 transition-all"
+              >
+                {br.name.toUpperCase()}
+              </span>
+            ));
+          })()}
         </div>
       </section>
 

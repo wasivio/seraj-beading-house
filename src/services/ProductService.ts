@@ -62,6 +62,18 @@ export const ProductService = {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
+  async getCategories(): Promise<any[]> {
+    const colRef = collection(db, 'categories');
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
+  async getBrands(): Promise<any[]> {
+    const colRef = collection(db, 'brands');
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
   async seedDatabaseIfNeeded() {
     // Seeder disabled. We show only actual items present in Firestore.
     return;

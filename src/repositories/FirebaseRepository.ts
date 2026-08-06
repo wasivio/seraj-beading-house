@@ -84,6 +84,12 @@ export const FirebaseRepository = {
     getHeroBanners() {
       return ProductService.getHeroBanners();
     },
+    getCategories() {
+      return ProductService.getCategories();
+    },
+    getBrands() {
+      return ProductService.getBrands();
+    },
     getProductById(id: string) {
       return ProductService.getProductById(id);
     },
