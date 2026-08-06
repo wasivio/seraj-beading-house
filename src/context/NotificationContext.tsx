@@ -51,6 +51,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const customEvent = e as CustomEvent<Notification>;
       const notif = customEvent.detail;
       
+      // Play premium notification chime sound
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(err => console.log('Audio playback blocked by browser:', err));
+
       // Add a popup toast message to screen
       showToast(notif.title, notif.body, notif.type, notif.link);
     };
