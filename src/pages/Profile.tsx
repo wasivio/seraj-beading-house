@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, Lock, ChevronRight, Trash2 } from 'lucide-react';
+import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, ChevronRight, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import type { Address } from '../types';
 
 export const Profile: React.FC = () => {
-  const { currentUser, isAuthenticated, loginWithGoogle, loginWithEmail, loginWithPhone, logout, updateUserProfile } = useAuth();
+  const { currentUser, isAuthenticated, loginWithGoogle, logout, updateUserProfile } = useAuth();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -17,12 +17,7 @@ export const Profile: React.FC = () => {
   // Redirect check
   const redirectPath = searchParams.get('redirect') || '';
 
-  // Auth screen states
-  const [authMethod, setAuthMethod] = useState<'email' | 'phone' | 'google'>('email');
-  const [emailInput, setEmailInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  // Auth screen loading state
   const [authLoading, setAuthLoading] = useState(false);
 
   // Profile Edit states
@@ -76,62 +71,13 @@ export const Profile: React.FC = () => {
     setAuthLoading(true);
     try {
       await loginWithGoogle();
-      showToast('Welcome!', 'Logged in successfully.', 'announcement');
+      showToast('Welcome!', 'Logged in successfully with Google.', 'announcement');
       if (redirectPath === 'checkout') {
         navigate('/checkout');
       }
     } catch (e) {
       console.error(e);
-      showToast('Error', 'Google authentication failed.', 'announcement');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailInput.trim() || !emailInput.includes('@')) {
-      showToast('Validation Error', 'Please enter a valid email address.', 'announcement');
-      return;
-    }
-
-    setAuthLoading(true);
-    try {
-      await loginWithEmail(emailInput);
-      showToast('Welcome!', 'Email login successful.', 'announcement');
-      if (redirectPath === 'checkout') {
-        navigate('/checkout');
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleSendOTP = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phoneInput.trim() || phoneInput.length < 10) {
-      showToast('Validation Error', 'Please enter a valid 10-digit phone number.', 'announcement');
-      return;
-    }
-    setOtpSent(true);
-    showToast('OTP Sent 💬', 'Please enter OTP code 123456 to verify.', 'announcement');
-  };
-
-  const handlePhoneVerifySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpInput.trim()) return;
-
-    setAuthLoading(true);
-    try {
-      await loginWithPhone(phoneInput, otpInput);
-      showToast('Verified Successful! 📱', 'Phone login successful.', 'announcement');
-      if (redirectPath === 'checkout') {
-        navigate('/checkout');
-      }
-    } catch (err: any) {
-      showToast('Error', err.message || 'OTP verification failed.', 'announcement');
+      showToast('Error', 'Google authentication failed. Please try again.', 'announcement');
     } finally {
       setAuthLoading(false);
     }
@@ -157,147 +103,86 @@ export const Profile: React.FC = () => {
     }
   };
 
-  // RENDER: GUEST ACCESS / SIGN-IN VIEW
+  // RENDER: GUEST ACCESS / SIGN-IN VIEW (GOOGLE ONLY)
   if (!isAuthenticated || !currentUser) {
     return (
-      <div className="flex flex-col gap-6 max-w-md mx-auto items-center pt-6">
+      <div className="flex flex-col gap-6 max-w-md mx-auto items-center pt-8 px-2">
         
         {/* Logo */}
-        <img 
-          src="/logo.jpg" 
-          alt="Siraj Bedding House" 
-          className="w-16 h-16 rounded-full object-cover border-2 border-stone-200 dark:border-stone-800 shadow-md"
-        />
+        <div className="relative">
+          <img 
+            src="/logo.jpg" 
+            alt="Siraj Bedding House" 
+            className="w-20 h-20 rounded-full object-cover border-2 border-amber-700/40 shadow-xl"
+          />
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-stone-900 flex items-center justify-center text-[10px] text-white">✓</span>
+        </div>
 
         {/* Title */}
         <div className="text-center flex flex-col items-center gap-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">{t('secureAccess')}</span>
-          <h2 className="font-sans font-extrabold text-2xl tracking-tight">{t('accessSuite')}</h2>
-          <p className="font-sans text-xs text-stone-500 max-w-xs mt-1">
+          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">{t('secureAccess')}</span>
+          <h2 className="font-sans font-extrabold text-2xl sm:text-3xl tracking-tight text-stone-900 dark:text-stone-100">
+            {redirectPath === 'checkout' ? 'Sign In to Complete Order' : 'Welcome to Siraj Bedding'}
+          </h2>
+          <p className="font-sans text-xs text-stone-500 dark:text-stone-400 max-w-xs mt-1 leading-relaxed">
             {redirectPath === 'checkout' 
-              ? 'Please login briefly to complete shipping payment processes.' 
-              : t('signInDetails')}
+              ? 'Sign in securely with your Google account to complete your checkout and track delivery.' 
+              : 'Sign in to access your order history, saved addresses, and exclusive member discounts.'}
           </p>
         </div>
 
         {/* Auth Box */}
-        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-6 shadow-xl w-full flex flex-col gap-5">
+        <div className="bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-850/60 rounded-3xl p-6 sm:p-7 shadow-xl w-full flex flex-col gap-5 text-center">
           
-          {/* Method tabs */}
-          <div className="flex bg-stone-100 dark:bg-stone-850 p-1 rounded-xl">
-            {(['email', 'phone', 'google'] as const).map(method => (
-              <button
-                key={method}
-                onClick={() => { setAuthMethod(method); setOtpSent(false); }}
-                className={`flex-grow py-2 text-xs font-sans font-bold capitalize rounded-lg transition-all cursor-pointer ${
-                  authMethod === method
-                    ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
-                    : 'text-stone-400'
-                }`}
-              >
-                {method}
-              </button>
-            ))}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-xs font-semibold text-stone-600 dark:text-stone-300">
+              Instant 1-Tap Google Sign-In
+            </span>
+            <p className="text-[11px] text-stone-400 dark:text-stone-500 leading-relaxed">
+              No passwords to remember. One-click secure authentication.
+            </p>
           </div>
 
-          {/* EMAIL FORM */}
-          {authMethod === 'email' && (
-            <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] text-stone-400 font-bold uppercase">Email Address</span>
-                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
-                  <Mail size={16} className="text-stone-400 mr-2 flex-shrink-0" />
-                  <input
-                    type="email" required
-                    placeholder="name@example.com"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none focus:ring-0"
-                  />
-                </div>
+          {/* GOOGLE SIGN IN BUTTON */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={authLoading}
+            className="w-full bg-white dark:bg-stone-950 hover:bg-stone-50 dark:hover:bg-stone-900 text-stone-800 dark:text-stone-100 border-2 border-stone-200 dark:border-stone-800 py-3.5 px-4 rounded-2xl font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-3 cursor-pointer shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {authLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                <span>Connecting with Google...</span>
               </div>
+            ) : (
+              <>
+                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </>
+            )}
+          </button>
 
-              <button
-                type="submit"
-                disabled={authLoading}
-                className="w-full bg-luxury-gold hover:opacity-90 py-3 rounded-xl font-sans font-bold text-xs text-stone-100 mt-2 shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {authLoading ? 'Verifying...' : 'Sign In with Email'}
-              </button>
-            </form>
-          )}
-
-          {/* PHONE OTP FORM */}
-          {authMethod === 'phone' && (
-            <div className="flex flex-col gap-4">
-              {otpSent ? (
-                // Verify OTP Form
-                <form onSubmit={handlePhoneVerifySubmit} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase">Enter OTP Code (use: 123456)</span>
-                    <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
-                      <Lock size={16} className="text-stone-400 mr-2 flex-shrink-0" />
-                      <input
-                        type="text" required maxLength={6}
-                        placeholder="123456"
-                        value={otpInput}
-                        onChange={(e) => setOtpInput(e.target.value)}
-                        className="w-full bg-transparent border-none outline-none tracking-widest text-center focus:ring-0"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full bg-luxury-gold hover:opacity-90 py-3 rounded-xl font-sans font-bold text-xs text-stone-100 mt-2 shadow-md cursor-pointer disabled:opacity-50"
-                  >
-                    {authLoading ? 'Verifying OTP...' : 'Verify & Continue'}
-                  </button>
-                </form>
-              ) : (
-                // Request OTP Form
-                <form onSubmit={handleSendOTP} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase">Mobile Number</span>
-                    <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
-                      <Phone size={16} className="text-stone-400 mr-2 flex-shrink-0" />
-                      <input
-                        type="tel" required
-                        placeholder="10 digit number"
-                        value={phoneInput}
-                        onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full bg-transparent border-none outline-none focus:ring-0"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-luxury-gold hover:opacity-90 py-3 rounded-xl font-sans font-bold text-xs text-stone-100 mt-2 shadow-md cursor-pointer"
-                  >
-                    Send Verification SMS OTP
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* GOOGLE FORM */}
-          {authMethod === 'google' && (
-            <div className="flex flex-col gap-4 py-4 text-center">
-              <span className="text-xs text-stone-500 leading-relaxed px-4">
-                Authenticate instantly using your Google account parameters securely.
-              </span>
-              <button
-                onClick={handleGoogleLogin}
-                disabled={authLoading}
-                className="w-full bg-stone-900 hover:bg-stone-950 dark:bg-stone-800 dark:hover:bg-stone-850 text-stone-100 border border-stone-800 py-3 rounded-xl font-sans font-bold text-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {authLoading ? 'Connecting...' : 'Continue with Google'}
-              </button>
-            </div>
-          )}
+          {/* Privacy Trust Badge */}
+          <div className="pt-2 border-t border-stone-100 dark:border-stone-850 flex items-center justify-center gap-1.5 text-[10px] text-stone-400">
+            <span>🔒 End-to-end 256-bit encrypted authentication</span>
+          </div>
 
         </div>
       </div>
