@@ -160,25 +160,26 @@ export const Checkout: React.FC = () => {
       return;
     }
 
-    const newAddr: Omit<Address, 'id'> = {
-      name: newAddrName,
-      phone: newAddrPhone,
-      addressLine: newAddrLine,
-      area: newAddrArea || undefined,
-      landmark: newAddrLandmark || undefined,
-      city: newAddrCity || 'Hooghly',
-      district: newAddrDistrict || undefined,
-      state: newAddrState || 'West Bengal',
-      pincode: newAddrPincode,
-      postalCode: newAddrPincode,
+    const newAddr: any = {
+      name: newAddrName.trim(),
+      phone: newAddrPhone.trim(),
+      addressLine: newAddrLine.trim(),
+      city: newAddrCity.trim() || 'Hooghly',
+      state: newAddrState.trim() || 'West Bengal',
+      pincode: newAddrPincode.trim(),
+      postalCode: newAddrPincode.trim(),
       country: 'India',
       countryCode: 'IN',
       isDefault: addresses.length === 0,
-      type: newAddrType,
-      latitude: gpsCoords.lat,
-      longitude: gpsCoords.lng,
-      accuracy: gpsCoords.accuracy
+      type: newAddrType
     };
+
+    if (newAddrArea.trim()) newAddr.area = newAddrArea.trim();
+    if (newAddrLandmark.trim()) newAddr.landmark = newAddrLandmark.trim();
+    if (newAddrDistrict.trim()) newAddr.district = newAddrDistrict.trim();
+    if (typeof gpsCoords.lat === 'number') newAddr.latitude = gpsCoords.lat;
+    if (typeof gpsCoords.lng === 'number') newAddr.longitude = gpsCoords.lng;
+    if (typeof gpsCoords.accuracy === 'number') newAddr.accuracy = gpsCoords.accuracy;
 
     try {
       const saved = await firebaseService.firestore.saveAddress(newAddr);
@@ -230,7 +231,7 @@ export const Checkout: React.FC = () => {
 
     setPlacingOrder(true);
     try {
-      const order = await firebaseService.firestore.createOrder({
+      const orderPayload: any = {
         orderNumber: `SBH-${Math.floor(100000 + Math.random() * 900000)}`,
         status: 'pending',
         items: cartItems,
@@ -243,9 +244,6 @@ export const Checkout: React.FC = () => {
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'success',
         address,
         deliveryAddress: address,
-        latitude: address.latitude || undefined,
-        longitude: address.longitude || undefined,
-        locationAccuracy: address.accuracy || undefined,
         deliverySlot: {
           date: deliveryDate,
           time: deliveryTime
@@ -260,7 +258,13 @@ export const Checkout: React.FC = () => {
           }
         ],
         estimatedDelivery: new Date(Date.now() + 3600000 * 24 * 3).toISOString()
-      });
+      };
+
+      if (typeof address.latitude === 'number') orderPayload.latitude = address.latitude;
+      if (typeof address.longitude === 'number') orderPayload.longitude = address.longitude;
+      if (typeof address.accuracy === 'number') orderPayload.locationAccuracy = address.accuracy;
+
+      const order = await firebaseService.firestore.createOrder(orderPayload);
 
       // Clear local checkout cart
       clearCart();

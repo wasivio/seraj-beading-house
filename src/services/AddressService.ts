@@ -10,6 +10,27 @@ export interface PincodeLookupResult {
   country: string;
 }
 
+/**
+ * Strips all undefined fields recursively so Firestore never throws unsupported field value error.
+ */
+function cleanFirestoreData<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(cleanFirestoreData) as unknown as T;
+  }
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = typeof value === 'object' && value !== null
+        ? cleanFirestoreData(value)
+        : value;
+    }
+  }
+  return cleaned as T;
+}
+
 export const AddressService = {
   /**
    * Fetch all saved addresses for a user from Firestore
@@ -33,7 +54,11 @@ export const AddressService = {
   async saveAddresses(userId: string, items: Address[]): Promise<void> {
     if (!userId) return;
     const docRef = doc(db, 'addresses', userId);
-    await setDoc(docRef, { items, updatedAt: new Date().toISOString() });
+    const sanitizedItems = cleanFirestoreData(items);
+    await setDoc(docRef, { 
+      items: sanitizedItems, 
+      updatedAt: new Date().toISOString() 
+    });
   },
 
   /**
@@ -44,17 +69,40 @@ export const AddressService = {
     let updated = [...addresses];
     const now = new Date().toISOString();
 
-    const finalAddress: Address = {
-      ...address,
+    const rawAddress: Record<string, any> = {
       id: address.id || `addr-${Date.now()}`,
       userId,
-      createdAt: address.createdAt || now,
-      updatedAt: now,
+      name: address.name || '',
+      phone: address.phone || '',
+      addressLine: address.addressLine || '',
+      city: address.city || 'Hooghly',
+      state: address.state || 'West Bengal',
       pincode: address.pincode || address.postalCode || '712304',
       postalCode: address.postalCode || address.pincode || '712304',
       country: address.country || 'India',
-      countryCode: address.countryCode || 'IN'
+      countryCode: address.countryCode || 'IN',
+      isDefault: Boolean(address.isDefault),
+      type: address.type || 'home',
+      createdAt: address.createdAt || now,
+      updatedAt: now
     };
+
+    if (address.email) rawAddress.email = address.email;
+    if (address.house) rawAddress.house = address.house;
+    if (address.building) rawAddress.building = address.building;
+    if (address.street) rawAddress.street = address.street;
+    if (address.road) rawAddress.road = address.road;
+    if (address.area) rawAddress.area = address.area;
+    if (address.locality) rawAddress.locality = address.locality;
+    if (address.village) rawAddress.village = address.village;
+    if (address.suburb) rawAddress.suburb = address.suburb;
+    if (address.district) rawAddress.district = address.district;
+    if (address.landmark) rawAddress.landmark = address.landmark;
+    if (typeof address.latitude === 'number') rawAddress.latitude = address.latitude;
+    if (typeof address.longitude === 'number') rawAddress.longitude = address.longitude;
+    if (typeof address.accuracy === 'number') rawAddress.accuracy = address.accuracy;
+
+    const finalAddress = rawAddress as Address;
 
     const idx = updated.findIndex(a => a.id === finalAddress.id);
     if (idx > -1) {
