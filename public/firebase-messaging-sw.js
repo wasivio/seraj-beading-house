@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.body || '',
     icon: '/logo.jpg',
-    badge: '/favicon.svg',
+    badge: '/logo.jpg',
     tag: 'siraj-notification',
     sound: '/notification.mp3', // Supported in some mobile/desktop OS
     data: {
