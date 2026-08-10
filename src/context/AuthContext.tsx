@@ -46,8 +46,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           }
         }
-      } catch (err) {
-        console.error('Error getting Google redirect login result:', err);
+      } catch (err: any) {
+        // Suppress benign IndexedDB lifecycle / closing / unauthenticated errors
+        const errMsg = String(err?.message || err || '');
+        if (
+          errMsg.includes('Database is closing') ||
+          errMsg.includes('hidden') ||
+          errMsg.includes('IndexedDB') ||
+          err?.code === 'auth/null-user' ||
+          err?.code === 'auth/no-auth-event'
+        ) {
+          // Normal transient IndexedDB state in browser tabs
+          return;
+        }
+        console.warn('Google redirect check status:', err);
       }
     };
 
