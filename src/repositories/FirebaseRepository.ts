@@ -21,16 +21,18 @@ export const FirebaseRepository = {
     },
 
     onAuthStateChanged(callback: (user: any) => void) {
-      return AuthService.onAuthStateChanged((user) => {
+      return AuthService.onAuthStateChanged(async (user) => {
         if (!user) {
           callback(null);
         } else {
+          // Fetch persistent Firestore profile to restore custom phone and displayName
+          const firestoreProfile = await AuthService.getUserProfile(user.uid);
           callback({
             uid: user.uid,
-            name: user.displayName || 'Customer',
-            email: user.email || '',
-            phone: user.phoneNumber || '',
-            photoURL: user.photoURL || ''
+            name: firestoreProfile?.displayName || user.displayName || 'Customer',
+            email: firestoreProfile?.email || user.email || '',
+            phone: firestoreProfile?.phone || user.phoneNumber || '',
+            photoURL: firestoreProfile?.photoURL || user.photoURL || ''
           });
         }
       });
@@ -39,37 +41,44 @@ export const FirebaseRepository = {
     async signInWithGoogle() {
       const user = await AuthService.handleGoogleLogin();
       if (!user) return null;
+      const firestoreProfile = await AuthService.getUserProfile(user.uid);
       return {
         uid: user.uid,
-        name: user.displayName || 'Customer',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        photoURL: user.photoURL || ''
+        name: firestoreProfile?.displayName || user.displayName || 'Customer',
+        email: firestoreProfile?.email || user.email || '',
+        phone: firestoreProfile?.phone || user.phoneNumber || '',
+        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
       };
     },
 
     async signInWithEmail(email: string) {
       const user = await AuthService.signInWithEmail(email);
       if (!user) return null;
+      const firestoreProfile = await AuthService.getUserProfile(user.uid);
       return {
         uid: user.uid,
-        name: user.displayName || 'Customer',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        photoURL: user.photoURL || ''
+        name: firestoreProfile?.displayName || user.displayName || 'Customer',
+        email: firestoreProfile?.email || user.email || '',
+        phone: firestoreProfile?.phone || user.phoneNumber || '',
+        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
       };
     },
 
     async signInWithPhone(phone: string, otp: string) {
       const user = await AuthService.signInWithPhone(phone, otp);
       if (!user) return null;
+      const firestoreProfile = await AuthService.getUserProfile(user.uid);
       return {
         uid: user.uid,
-        name: user.displayName || 'Customer',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        photoURL: user.photoURL || ''
+        name: firestoreProfile?.displayName || user.displayName || 'Customer',
+        email: firestoreProfile?.email || user.email || '',
+        phone: firestoreProfile?.phone || phone || '',
+        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
       };
+    },
+
+    async updateUserProfile(userId: string, data: { name?: string; phone?: string; photoURL?: string }) {
+      return AuthService.updateUserProfile(userId, data);
     },
 
     async logout() {

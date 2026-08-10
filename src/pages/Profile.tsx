@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import type { Address } from '../types';
 
 export const Profile: React.FC = () => {
-  const { currentUser, isAuthenticated, loginWithGoogle, loginWithEmail, loginWithPhone, logout } = useAuth();
+  const { currentUser, isAuthenticated, loginWithGoogle, loginWithEmail, loginWithPhone, logout, updateUserProfile } = useAuth();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -27,6 +27,7 @@ export const Profile: React.FC = () => {
 
   // Profile Edit states
   const [isEditing, setIsEditing] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [avatarError, setAvatarError] = useState(false);
@@ -43,10 +44,11 @@ export const Profile: React.FC = () => {
     setIsClearing(true);
     try {
       await firebaseService.firestore.clearMockData();
-      alert('Firestore database cleared successfully! All mock products, reviews, and coupons have been deleted. You can now add real ones from the Admin panel.');
+      showToast('Database Cleared 🗑️', 'Mock data has been wiped from Firestore.', 'announcement');
       window.dispatchEvent(new CustomEvent('app_refresh_trigger'));
       window.location.reload();
     } catch (err: any) {
+      console.error(err);
       alert(`Error clearing database: ${err.message || err}`);
     } finally {
       setIsClearing(false);
@@ -59,8 +61,8 @@ export const Profile: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      setEditName(currentUser.name);
-      setEditPhone(currentUser.phone);
+      setEditName(currentUser.name || '');
+      setEditPhone(currentUser.phone || '');
       
       // Load default address
       firebaseService.firestore.getAddresses().then(list => {
@@ -135,18 +137,24 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
 
-    // Simulate update in mock Auth state
-    if (currentUser) {
-      currentUser.name = editName;
-      currentUser.phone = editPhone;
-      localStorage.setItem('siraj_auth_user', JSON.stringify(currentUser));
-      showToast('Profile Saved 👍', 'Your contact details have been updated.', 'announcement');
+    setSavingProfile(true);
+    try {
+      await updateUserProfile({
+        name: editName.trim(),
+        phone: editPhone.trim()
+      });
+      showToast('Profile Saved 👍', 'Your contact details have been updated in Firebase.', 'announcement');
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      showToast('Error', 'Failed to update profile. Please try again.', 'announcement');
+    } finally {
+      setSavingProfile(false);
     }
-    setIsEditing(false);
   };
 
   // RENDER: GUEST ACCESS / SIGN-IN VIEW
@@ -387,9 +395,10 @@ export const Profile: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-grow bg-luxury-gold text-stone-100 text-xs py-2 rounded-xl font-bold"
+                  disabled={savingProfile}
+                  className="flex-grow bg-luxury-gold hover:opacity-90 disabled:opacity-50 text-stone-100 text-xs py-2 rounded-xl font-bold cursor-pointer transition-opacity"
                 >
-                  {t('save')}
+                  {savingProfile ? 'Saving...' : t('save')}
                 </button>
               </div>
             </form>

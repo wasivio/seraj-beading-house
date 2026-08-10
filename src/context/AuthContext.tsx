@@ -19,6 +19,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<User | null>;
   loginWithEmail: (email: string) => Promise<User | null>;
   loginWithPhone: (phone: string, otp: string) => Promise<User | null>;
+  updateUserProfile: (data: { name?: string; phone?: string; photoURL?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,12 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (result?.user) {
           const syncedUser = await AuthService.handleGoogleLogin();
           if (syncedUser) {
+            const firestoreProfile = await AuthService.getUserProfile(syncedUser.uid);
             setCurrentUser({
               uid: syncedUser.uid,
-              name: syncedUser.displayName || 'Customer',
-              email: syncedUser.email || '',
-              phone: syncedUser.phoneNumber || '',
-              photoURL: syncedUser.photoURL || ''
+              name: firestoreProfile?.displayName || syncedUser.displayName || 'Customer',
+              email: firestoreProfile?.email || syncedUser.email || '',
+              phone: firestoreProfile?.phone || syncedUser.phoneNumber || '',
+              photoURL: firestoreProfile?.photoURL || syncedUser.photoURL || ''
             });
           }
         }
@@ -92,6 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (data: { name?: string; phone?: string; photoURL?: string }) => {
+    if (!currentUser?.uid) return;
+    await firebaseService.auth.updateUserProfile(currentUser.uid, data);
+    setCurrentUser(prev => prev ? {
+      ...prev,
+      name: data.name !== undefined ? (data.name || prev.name) : prev.name,
+      phone: data.phone !== undefined ? data.phone : prev.phone,
+      photoURL: data.photoURL !== undefined ? data.photoURL : prev.photoURL
+    } : null);
+  };
+
   const logout = () => {
     firebaseService.auth.logout();
     setCurrentUser(null);
@@ -104,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginWithGoogle,
     loginWithEmail,
     loginWithPhone,
+    updateUserProfile,
     logout
   };
 
