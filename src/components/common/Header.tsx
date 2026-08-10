@@ -32,11 +32,11 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
     setDetectingLoc(true);
     showToast('Locating... 🛰️', 'Detecting your real-time location...', 'announcement');
     try {
-      const loc = await LocationService.detectCurrentLocation();
-      const label = `${loc.city}, ${loc.pincode}`;
+      const { address } = await LocationService.detectCurrentLocation();
+      const label = `${address.city}, ${address.pincode}`;
       setUserLocation(label);
       localStorage.setItem('siraj_user_loc', label);
-      showToast('Location Detected 📍', `Deliver to ${loc.city}, ${loc.state} (${loc.pincode})`, 'announcement');
+      showToast('Location Detected 📍', `Deliver to ${address.city}, ${address.state} (${address.pincode})`, 'announcement');
     } catch {
       showToast('Location Error', 'Unable to auto-detect location.', 'announcement');
     } finally {

@@ -61,17 +61,34 @@ export interface CartItem {
 
 export interface Address {
   id: string;
+  userId?: string;
   name: string;
   phone: string;
   email?: string;
-  addressLine: string;
+  house?: string;
+  building?: string;
+  street?: string;
+  road?: string;
+  area?: string;
+  locality?: string;
+  village?: string;
+  suburb?: string;
   city: string;
+  district?: string;
   state: string;
+  postalCode?: string;
   pincode: string;
+  landmark?: string;
+  country?: string;
+  countryCode?: string;
+  addressLine: string;
   isDefault: boolean;
   type: 'home' | 'work' | 'other';
   latitude?: number;
   longitude?: number;
+  accuracy?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface OrderTimelineStep {
@@ -95,6 +112,10 @@ export interface Order {
   paymentMethod: 'upi' | 'card' | 'net_banking' | 'cod' | 'wallet';
   paymentStatus: 'pending' | 'success' | 'failed';
   address: Address;
+  deliveryAddress?: Address;
+  latitude?: number;
+  longitude?: number;
+  locationAccuracy?: number;
   deliverySlot: {
     date: string;
     time: string;

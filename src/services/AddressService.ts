@@ -2,26 +2,58 @@ import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { Address } from '../types';
 
+export interface PincodeLookupResult {
+  pincode: string;
+  city: string;
+  district: string;
+  state: string;
+  country: string;
+}
+
 export const AddressService = {
+  /**
+   * Fetch all saved addresses for a user from Firestore
+   */
   async getAddresses(userId: string): Promise<Address[]> {
-    const docRef = doc(db, 'addresses', userId);
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) return [];
-    return snap.data().items || [];
+    if (!userId) return [];
+    try {
+      const docRef = doc(db, 'addresses', userId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) return [];
+      return snap.data().items || [];
+    } catch (e) {
+      console.error('Error fetching addresses from Firestore:', e);
+      return [];
+    }
   },
 
+  /**
+   * Overwrite address list in Firestore for user
+   */
   async saveAddresses(userId: string, items: Address[]): Promise<void> {
+    if (!userId) return;
     const docRef = doc(db, 'addresses', userId);
-    await setDoc(docRef, { items });
+    await setDoc(docRef, { items, updatedAt: new Date().toISOString() });
   },
 
+  /**
+   * Create or update a single address
+   */
   async saveAddress(userId: string, address: Omit<Address, 'id'> & { id?: string }): Promise<Address> {
     const addresses = await this.getAddresses(userId);
     let updated = [...addresses];
+    const now = new Date().toISOString();
 
     const finalAddress: Address = {
       ...address,
-      id: address.id || `addr-${Date.now()}`
+      id: address.id || `addr-${Date.now()}`,
+      userId,
+      createdAt: address.createdAt || now,
+      updatedAt: now,
+      pincode: address.pincode || address.postalCode || '712304',
+      postalCode: address.postalCode || address.pincode || '712304',
+      country: address.country || 'India',
+      countryCode: address.countryCode || 'IN'
     };
 
     const idx = updated.findIndex(a => a.id === finalAddress.id);
@@ -39,10 +71,54 @@ export const AddressService = {
     return finalAddress;
   },
 
+  /**
+   * Delete an address by ID
+   */
   async deleteAddress(userId: string, addressId: string): Promise<void> {
     const addresses = await this.getAddresses(userId);
     const updated = addresses.filter(a => a.id !== addressId);
     await this.saveAddresses(userId, updated);
+  },
+
+  /**
+   * Postal PIN code lookup API (India Post API + fallback dictionary)
+   */
+  async lookupPincode(pincode: string): Promise<PincodeLookupResult | null> {
+    const cleaned = pincode.replace(/\D/g, '').slice(0, 6);
+    if (cleaned.length !== 6) return null;
+
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${cleaned}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+          const po = data[0].PostOffice[0];
+          return {
+            pincode: cleaned,
+            city: po.District || po.Block || po.Division || '',
+            district: po.District || '',
+            state: po.State || '',
+            country: 'India'
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('PIN code online lookup failed:', e);
+    }
+
+    // Default region fallback for Hooghly PIN codes
+    if (cleaned.startsWith('712')) {
+      return {
+        pincode: cleaned,
+        city: 'Hooghly',
+        district: 'Hooghly',
+        state: 'West Bengal',
+        country: 'India'
+      };
+    }
+
+    return null;
   }
 };
+
 export type AddressServiceType = typeof AddressService;
