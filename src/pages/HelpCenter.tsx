@@ -7,7 +7,7 @@ export const HelpCenter: React.FC = () => {
   const { t } = useLanguage();
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/919988776655?text=Hello%20Siraj%20Bedding%20House', '_blank');
+    window.open('https://wa.me/917352502508?text=Hello%20Siraj%20Bedding%20House', '_blank');
   };
 
   return (
@@ -18,7 +18,7 @@ export const HelpCenter: React.FC = () => {
         <span className="text-[10px] uppercase font-bold tracking-widest text-amber-705">Customer Support</span>
         <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">{t('helpCenter')}</h2>
         <p className="font-sans text-xs text-stone-500 max-w-md mx-auto mt-1">
-          Have questions about mattress sizing, shipping logistics, or return warranties? We are here to assist.
+          Have questions about mattress sizing, shipping logistics, or custom upholstery? We are here to assist.
         </p>
       </div>
 
@@ -34,7 +34,14 @@ export const HelpCenter: React.FC = () => {
               <Phone className="text-amber-700 mt-0.5" size={16} />
               <div className="flex flex-col text-left">
                 <span className="font-bold text-xs">Call Support</span>
-                <span className="text-[11px] text-stone-400 mt-0.5">Direct hotline: +91 99887 76655</span>
+                <div className="flex flex-col gap-0.5 mt-0.5">
+                  <a href="tel:+919800094590" className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-amber-700 font-medium">
+                    +91 98000 94590
+                  </a>
+                  <a href="tel:+917352502508" className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-amber-700 font-medium">
+                    +91 73525 02508
+                  </a>
+                </div>
               </div>
             </div>
             
@@ -46,7 +53,7 @@ export const HelpCenter: React.FC = () => {
                   onClick={handleWhatsApp}
                   className="text-[11px] text-emerald-600 hover:underline mt-0.5 font-bold cursor-pointer text-left"
                 >
-                  Click to Chat on WhatsApp
+                  +91 73525 02508 (Click to Chat on WhatsApp)
                 </button>
               </div>
             </div>
@@ -55,7 +62,9 @@ export const HelpCenter: React.FC = () => {
               <Mail className="text-amber-700 mt-0.5" size={16} />
               <div className="flex flex-col text-left">
                 <span className="font-bold text-xs">Email Correspondence</span>
-                <span className="text-[11px] text-stone-400 mt-0.5">support@sirajbedding.com</span>
+                <a href="mailto:mdshussain8725@gmail.com" className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-amber-700 mt-0.5 font-medium">
+                  mdshussain8725@gmail.com
+                </a>
               </div>
             </div>
 
@@ -63,7 +72,7 @@ export const HelpCenter: React.FC = () => {
               <Clock className="text-amber-700 mt-0.5" size={16} />
               <div className="flex flex-col text-left">
                 <span className="font-bold text-xs">Studio Timings</span>
-                <span className="text-[11px] text-stone-400 mt-0.5">Mon - Sat: 10:00 AM - 08:30 PM (Sunday Closed)</span>
+                <span className="text-[11px] text-stone-400 mt-0.5">Mon - Sat: 10:00 AM - 08:30 PM (Sunday Open)</span>
               </div>
             </div>
           </div>
@@ -76,18 +85,18 @@ export const HelpCenter: React.FC = () => {
             <MapPin className="text-amber-700 mt-0.5 flex-shrink-0" size={16} />
             <div className="flex flex-col">
               <span className="font-bold text-xs">Store Address</span>
-              <p className="text-[11px] text-stone-400 leading-relaxed mt-0.5">
-                Shop 4-5, Luxury Market Complex, Civil Lines, Gorakhpur, Uttar Pradesh - 273001
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed mt-0.5">
+                <strong>Janai Subeder More</strong>, Vill: Janai, Post: Janai, P.S: Chanditala, Dist: Hooghly, West Bengal - 712304
               </p>
             </div>
           </div>
           
-          {/* Simulated Google Map Iframe Placeholder */}
+          {/* Studio Map Location Card */}
           <div className="h-32 w-full rounded-2xl bg-stone-100 dark:bg-stone-800 border border-stone-200/30 flex items-center justify-center overflow-hidden">
             <div className="flex flex-col items-center gap-1 text-[10px] text-stone-400 p-4 text-center">
               <MapPin size={20} className="text-amber-750" />
-              <span className="font-bold">Google Maps Active Studio</span>
-              <span>Latitude: 26.7606° N • Longitude: 83.3731° E</span>
+              <span className="font-bold text-stone-700 dark:text-stone-200">Siraj Bedding House</span>
+              <span>Janai Subeder More, Hooghly, Pin: 712304</span>
             </div>
           </div>
         </div>

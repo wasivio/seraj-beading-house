@@ -418,24 +418,31 @@ export const Home: React.FC = () => {
               <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Siraj Bedding House</h4>
             </div>
             <p className="font-sans leading-relaxed text-stone-400">
-              Premium orthopedic mattresses, cushions, luxury sheets and foam blocks since 1976. Gorakhpur's leading sleep studio.
+              Premium orthopedic mattresses, cushions, luxury sheets and foam blocks. Hooghly's premier sleep studio.
             </p>
           </div>
           {/* Col 2 */}
           <div className="flex flex-col gap-2">
-            <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Contact & Timing</h4>
+            <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Contact & Support</h4>
             <div className="flex flex-col gap-1.5 text-stone-400">
-              <span className="flex items-center gap-1.5"><Phone size={12} /> +91 99887 76655</span>
-              <span className="flex items-center gap-1.5"><Mail size={12} /> info@sirajbedding.com</span>
-              <span className="flex items-center gap-1.5"><Clock size={12} /> 10:00 AM - 08:30 PM (Sun Closed)</span>
+              <a href="tel:+919800094590" className="flex items-center gap-1.5 hover:text-amber-700 transition-colors">
+                <Phone size={12} /> +91 98000 94590
+              </a>
+              <a href="https://wa.me/917352502508?text=Hello%20Siraj%20Bedding%20House" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 hover:underline">
+                <Phone size={12} /> +91 73525 02508 (WhatsApp)
+              </a>
+              <a href="mailto:mdshussain8725@gmail.com" className="flex items-center gap-1.5 hover:text-amber-700 transition-colors">
+                <Mail size={12} /> mdshussain8725@gmail.com
+              </a>
+              <span className="flex items-center gap-1.5"><Clock size={12} /> 10:00 AM - 08:30 PM</span>
             </div>
           </div>
           {/* Col 3 */}
           <div className="flex flex-col gap-2">
             <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Store Address</h4>
             <span className="flex items-start gap-1.5 text-stone-400 leading-relaxed">
-              <MapPin size={12} className="mt-0.5 flex-shrink-0" />
-              <span>Shop 4-5, Luxury Market Complex, Civil Lines, Gorakhpur, UP - 273001</span>
+              <MapPin size={12} className="mt-0.5 flex-shrink-0 text-amber-700" />
+              <span>Janai Subeder More, Vill & Post: Janai, P.S: Chanditala, Dist: Hooghly, West Bengal - 712304</span>
             </span>
           </div>
         </div>

@@ -13,7 +13,7 @@ export const translations = {
     
     // Header & Search
     searchPlaceholder: 'Search mattresses, pillows, cushions...',
-    location: 'Gorakhpur, UP',
+    location: 'Janai, Hooghly',
     recentSearch: 'Recent Searches',
     popularSearch: 'Popular Categories',
     voiceSearch: 'Tap mic & speak...',
@@ -133,7 +133,7 @@ export const translations = {
     
     // Header & Search
     searchPlaceholder: 'गद्दे, तकिए, कुशन खोजें...',
-    location: 'गोरखपुर, यूपी',
+    location: 'जनाई, हुगली',
     recentSearch: 'हालिया खोज',
     popularSearch: 'लोकप्रिय श्रेणियां',
     voiceSearch: 'माइक दबाकर बोलें...',
@@ -253,7 +253,7 @@ export const translations = {
     
     // Header & Search
     searchPlaceholder: 'তোশক, বালিশ, কুশন খুঁজুন...',
-    location: 'গোরক্ষপুর, ইউপি',
+    location: 'জনাই, হুগলি',
     recentSearch: 'সাম্প্রতিক অনুসন্ধান',
     popularSearch: 'জনপ্রিয় ক্যাটেগরি',
     voiceSearch: 'মাইক টিপে কথা বলুন...',

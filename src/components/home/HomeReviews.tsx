@@ -12,19 +12,19 @@ interface ReviewItem {
 const REVIEWS: ReviewItem[] = [
   {
     name: 'Gaurav Srivastava',
-    role: 'Homeowner, Gorakhpur',
+    role: 'Homeowner, Hooghly',
     rating: 5,
     comment: 'Siraj Bedding House has been our family shop for mattresses and foams for the last 20 years. The quality of foam they provide is unmatched, and their custom size mattresses fit our beds perfectly!'
   },
   {
     name: 'Anjali Mishra',
-    role: 'Interior Designer, Lucknow',
+    role: 'Interior Designer, Kolkata',
     rating: 5,
     comment: 'As a designer, I always recommend Siraj Bedding House for custom sofa fillings and heavy curtains. Their High Resilience foams maintain shape for years. The Egyptian sheets are of extreme luxury standard.'
   },
   {
     name: 'Sardar Manpreet Singh',
-    role: 'Hotel Owner, Gorakhpur',
+    role: 'Hotel Owner, Hooghly',
     rating: 5,
     comment: 'Ordered 50 custom pocket-spring orthopedic mattresses for our luxury suites. The guests are loving the sleep quality. Delivered right on schedule. 50 years of trust is fully visible in their service.'
   }

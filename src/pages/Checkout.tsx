@@ -80,10 +80,10 @@ export const Checkout: React.FC = () => {
         setGpsCoords({ lat: latitude, lng: longitude });
         
         // Populate inputs with mockup reverse geocode info
-        setNewAddrLine(`GPS: ${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E (Simulated Upholstery Center)`);
-        setNewAddrCity('Gorakhpur');
-        setNewAddrState('Uttar Pradesh');
-        setNewAddrPincode('273001');
+        setNewAddrLine(`GPS: ${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E (Janai Subeder More)`);
+        setNewAddrCity('Hooghly');
+        setNewAddrState('West Bengal');
+        setNewAddrPincode('712304');
 
         setGpsLoading(false);
         showToast('GPS Coordinates Loaded 🛰️', 'Location coordinates resolved successfully.', 'announcement');
@@ -108,8 +108,8 @@ export const Checkout: React.FC = () => {
       name: newAddrName,
       phone: newAddrPhone,
       addressLine: newAddrLine,
-      city: newAddrCity || 'Gorakhpur',
-      state: newAddrState || 'Uttar Pradesh',
+      city: newAddrCity || 'Hooghly',
+      state: newAddrState || 'West Bengal',
       pincode: newAddrPincode,
       isDefault: addresses.length === 0,
       type: newAddrType,
@@ -265,7 +265,7 @@ export const Checkout: React.FC = () => {
                       <input
                         type="tel" required
                         value={newAddrPhone} onChange={(e) => setNewAddrPhone(e.target.value)}
-                        placeholder="+91 99887 76655"
+                        placeholder="+91 98000 94590"
                         className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none"
                       />
                     </div>
@@ -298,7 +298,7 @@ export const Checkout: React.FC = () => {
                       <input
                         type="text" required
                         value={newAddrPincode} onChange={(e) => setNewAddrPincode(e.target.value)}
-                        placeholder="273001"
+                        placeholder="712304"
                         className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none"
                       />
                     </div>
