@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Bell, Volume2 } from 'lucide-react';
+import { Bell, Sliders } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import type { Notification } from '../types';
 
 export const Notifications: React.FC = () => {
   const { t } = useLanguage();
@@ -13,27 +12,11 @@ export const Notifications: React.FC = () => {
     requestNotificationPermission,
     saveFCMConfig,
     markNotificationAsRead,
-    markAllNotificationsAsRead,
-    triggerAdminPush
+    markAllNotificationsAsRead
   } = useNotifications();
 
   // Settings tab or list view selector
-  const [activeTab, setActiveTab] = useState<'list' | 'settings' | 'admin'>('list');
-
-  // Simulated Admin Push Form
-  const [adminTitle, setAdminTitle] = useState('Weekend Flash Offer! ⚡');
-  const [adminBody, setAdminBody] = useState('Get extra 15% discount on all custom sofa foams and pillow blocks. Valid today!');
-  const [adminType, setAdminType] = useState<Notification['type']>('offer');
-
-  const handleAdminTriggerSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminTitle.trim() || !adminBody.trim()) return;
-
-    triggerAdminPush(adminTitle, adminBody, adminType, '/categories');
-    setAdminTitle('');
-    setAdminBody('');
-    setActiveTab('list');
-  };
+  const [activeTab, setActiveTab] = useState<'list' | 'settings'>('list');
 
   const handleToggleSetting = (key: keyof typeof fcmConfig.settings) => {
     const updated = {
@@ -66,18 +49,18 @@ export const Notifications: React.FC = () => {
         {unreadCount > 0 && activeTab === 'list' && (
           <button
             onClick={markAllNotificationsAsRead}
-            className="text-xs font-bold text-amber-700 dark:text-amber-405 hover:underline cursor-pointer"
+            className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
           >
             {t('markAllRead')}
           </button>
         )}
       </div>
 
-      {/* FCM Permission Popup trigger if Default */}
+      {/* Permission Popup trigger if Default */}
       {fcmConfig.permission === 'default' && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <Bell size={20} className="text-amber-705 flex-shrink-0 mt-0.5" />
+            <Bell size={20} className="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex flex-col">
               <h4 className="font-sans font-bold text-xs">Enable Push Notifications</h4>
               <p className="font-sans text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed mt-0.5">
@@ -96,17 +79,17 @@ export const Notifications: React.FC = () => {
 
       {/* Navigation tabs */}
       <div className="flex border-b border-stone-200/40 dark:border-stone-850/40 pb-px">
-        {(['list', 'settings', 'admin'] as const).map(tab => (
+        {(['list', 'settings'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-grow sm:flex-grow-0 sm:px-6 py-2.5 font-sans font-bold text-xs border-b-2 capitalize transition-all cursor-pointer ${
               activeTab === tab
-                ? 'border-amber-700 text-amber-700 font-extrabold'
-                : 'border-transparent text-stone-400 hover:text-stone-605'
+                ? 'border-amber-700 text-amber-700 dark:text-amber-400 font-extrabold'
+                : 'border-transparent text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
             }`}
           >
-            {tab === 'list' ? `Alerts (${notifications.length})` : tab === 'settings' ? 'Preferences' : 'Admin Panel (FCM)'}
+            {tab === 'list' ? `Alerts (${notifications.length})` : 'Preferences'}
           </button>
         ))}
       </div>
@@ -116,7 +99,7 @@ export const Notifications: React.FC = () => {
         <div className="flex flex-col gap-3">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center max-w-xs mx-auto">
-              <div className="p-4 bg-stone-100 dark:bg-stone-900 rounded-full text-stone-450">
+              <div className="p-4 bg-stone-100 dark:bg-stone-900 rounded-full text-stone-400">
                 <Bell size={32} />
               </div>
               <h4 className="font-sans font-bold text-base">{t('noNotifications')}</h4>
@@ -132,7 +115,7 @@ export const Notifications: React.FC = () => {
                 className={`p-4 rounded-2xl border transition-all relative flex gap-3.5 cursor-pointer ${
                   notif.isRead
                     ? 'bg-white dark:bg-stone-900 border-stone-200/40 dark:border-stone-850/30 opacity-75'
-                    : 'bg-amber-50/10 dark:bg-amber-955/5 border-amber-600/30'
+                    : 'bg-amber-50/10 dark:bg-amber-950/10 border-amber-600/30'
                 }`}
               >
                 {/* Visual Unread dot */}
@@ -168,12 +151,15 @@ export const Notifications: React.FC = () => {
         <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-6">
           <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-850 pb-4">
             <div className="flex flex-col">
-              <span className="font-bold text-sm">Allow System Notifications</span>
-              <p className="text-xs text-stone-400 mt-0.5">Toggle push alerts globally across this PWA environment.</p>
+              <span className="font-bold text-sm flex items-center gap-1.5">
+                <Sliders size={16} className="text-amber-700 dark:text-amber-400" />
+                <span>Allow Notifications</span>
+              </span>
+              <p className="text-xs text-stone-400 mt-0.5">Toggle push alerts and updates on this device.</p>
             </div>
             <button
               onClick={handleToggleGlobal}
-              className={`w-11 h-6 rounded-full transition-all relative ${
+              className={`w-11 h-6 rounded-full transition-all relative cursor-pointer ${
                 fcmConfig.enabled ? 'bg-amber-700' : 'bg-stone-200 dark:bg-stone-800'
               }`}
             >
@@ -194,16 +180,16 @@ export const Notifications: React.FC = () => {
                 { key: 'flashSale', label: 'Flash Offers', desc: 'Limited hour stock clearance deals.' },
                 { key: 'priceDrop', label: 'Wishlist Price Drops', desc: 'Alerts when saved mattress price decreases.' },
                 { key: 'orderUpdate', label: 'Order Status Changes', desc: 'Timeline confirmations, packing details.' },
-                { key: 'deliveryUpdate', label: 'Delivery Handover progress', desc: 'Simulated courier out for delivery notifications.' }
+                { key: 'deliveryUpdate', label: 'Delivery Handover progress', desc: 'Courier dispatch and out for delivery notifications.' }
               ] as const).map(item => (
                 <div key={item.key} className="flex items-center justify-between text-xs py-1">
                   <div className="flex flex-col pr-6">
                     <span className="font-bold">{item.label}</span>
-                    <span className="text-[11px] text-stone-450 dark:text-stone-400 mt-0.5 leading-relaxed">{item.desc}</span>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">{item.desc}</span>
                   </div>
                   <button
                     onClick={() => handleToggleSetting(item.key)}
-                    className={`w-10 h-5 rounded-full transition-all relative flex-shrink-0 ${
+                    className={`w-10 h-5 rounded-full transition-all relative flex-shrink-0 cursor-pointer ${
                       fcmConfig.settings[item.key] ? 'bg-amber-700' : 'bg-stone-200 dark:bg-stone-800'
                     }`}
                   >
@@ -215,63 +201,6 @@ export const Notifications: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* TAB CONTENT: ADMIN SIMULATED PUSHER */}
-      {activeTab === 'admin' && (
-        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
-          <div className="flex items-start gap-3 border-b border-stone-100 dark:border-stone-850/30 pb-3">
-            <Volume2 className="text-amber-700 flex-shrink-0 mt-0.5" size={18} />
-            <div className="flex flex-col">
-              <span className="font-bold text-sm">FCM simulated Broadcaster</span>
-              <p className="text-xs text-stone-400 mt-0.5">Use this administrative sandbox tool to mock incoming push updates.</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleAdminTriggerSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-stone-400 font-bold uppercase">Push Notification Title</span>
-              <input
-                type="text" required
-                value={adminTitle} onChange={(e) => setAdminTitle(e.target.value)}
-                placeholder="Title text"
-                className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-stone-400 font-bold uppercase">Push message Body details</span>
-              <textarea
-                required rows={3}
-                value={adminBody} onChange={(e) => setAdminBody(e.target.value)}
-                placeholder="Alert description"
-                className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-stone-400 font-bold uppercase">Alert type Channel</span>
-              <select
-                value={adminType}
-                onChange={(e) => setAdminType(e.target.value as any)}
-                className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none"
-              >
-                <option value="offer">Flash Offer Promotion</option>
-                <option value="product">New Product Alert</option>
-                <option value="festival">Festival Campaign</option>
-                <option value="price_drop">Price Drop Alert</option>
-                <option value="announcement">Announcement</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-luxury-gold hover:opacity-90 py-3 rounded-xl font-sans font-bold text-xs text-stone-100 mt-2 shadow-md cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Broadcast Push Broadcast</span>
-            </button>
-          </form>
         </div>
       )}
 
