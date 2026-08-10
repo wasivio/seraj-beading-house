@@ -191,10 +191,10 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
               )}
             </Link>
 
-            {/* User Profile */}
+            {/* User Profile (Hidden on mobile, available in bottom navigation) */}
             <Link 
               to="/profile" 
-              className="p-2 text-stone-700 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400 transition-colors tap-highlight-none"
+              className="p-2 text-stone-700 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400 transition-colors tap-highlight-none hidden sm:block"
               aria-label="Profile"
             >
               {isAuthenticated && currentUser?.photoURL && !avatarError ? (
