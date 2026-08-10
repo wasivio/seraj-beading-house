@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
 import { useLanguage } from '../context/LanguageContext';
+import { LocationService } from '../services/LocationService';
 import type { Address } from '../types';
 
 export const Checkout: React.FC = () => {
@@ -67,34 +68,25 @@ export const Checkout: React.FC = () => {
     loadAddresses();
   }, [isAuthenticated]);
 
-  const handleGPSAutofill = () => {
-    if (!navigator.geolocation) {
-      showToast('GPS Error', 'Geolocation is not supported by your browser.', 'announcement');
-      return;
-    }
-
+  const handleGPSAutofill = async () => {
     setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setGpsCoords({ lat: latitude, lng: longitude });
-        
-        // Populate inputs with mockup reverse geocode info
-        setNewAddrLine(`GPS: ${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E (Janai Subeder More)`);
-        setNewAddrCity('Hooghly');
-        setNewAddrState('West Bengal');
-        setNewAddrPincode('712304');
+    showToast('Detecting Location... 🛰️', 'Fetching your real-time GPS & address...', 'announcement');
+    try {
+      const loc = await LocationService.detectCurrentLocation();
+      setGpsCoords({ lat: loc.latitude, lng: loc.longitude });
+      
+      setNewAddrLine(loc.addressLine);
+      setNewAddrCity(loc.city);
+      setNewAddrState(loc.state);
+      setNewAddrPincode(loc.pincode);
 
-        setGpsLoading(false);
-        showToast('GPS Coordinates Loaded 🛰️', 'Location coordinates resolved successfully.', 'announcement');
-      },
-      (error) => {
-        console.error(error);
-        setGpsLoading(false);
-        showToast('GPS Failed', 'Failed to retrieve location coordinates.', 'announcement');
-      },
-      { enableHighAccuracy: true, timeout: 5000 }
-    );
+      showToast('Location Auto-Filled! 📍', `${loc.city}, ${loc.state} (${loc.pincode})`, 'announcement');
+    } catch (err) {
+      console.error('GPS autofill failed:', err);
+      showToast('Location Failed', 'Could not detect location. Please fill manually.', 'announcement');
+    } finally {
+      setGpsLoading(false);
+    }
   };
 
   const handleAddAddressSubmit = async (e: React.FormEvent) => {

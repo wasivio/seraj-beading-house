@@ -7,6 +7,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { LocationService } from '../../services/LocationService';
 
 interface HeaderProps {
   onSearchOpen: () => void;
@@ -16,13 +17,32 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
   const { currentUser, isAuthenticated } = useAuth();
   const { cartItems } = useCart();
   const { wishlist } = useWishlist();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, showToast } = useNotifications();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [avatarError, setAvatarError] = useState(false);
+  const [detectingLoc, setDetectingLoc] = useState(false);
+  const [userLocation, setUserLocation] = useState<string>(() => localStorage.getItem('siraj_user_loc') || '');
   const selectedLocation = t('location');
+
+  const handleDetectHeaderLocation = async () => {
+    if (detectingLoc) return;
+    setDetectingLoc(true);
+    showToast('Locating... 🛰️', 'Detecting your real-time location...', 'announcement');
+    try {
+      const loc = await LocationService.detectCurrentLocation();
+      const label = `${loc.city}, ${loc.pincode}`;
+      setUserLocation(label);
+      localStorage.setItem('siraj_user_loc', label);
+      showToast('Location Detected 📍', `Deliver to ${loc.city}, ${loc.state} (${loc.pincode})`, 'announcement');
+    } catch {
+      showToast('Location Error', 'Unable to auto-detect location.', 'announcement');
+    } finally {
+      setDetectingLoc(false);
+    }
+  };
 
   useEffect(() => {
     setAvatarError(false);
@@ -75,9 +95,13 @@ export const Header: React.FC<HeaderProps> = ({ onSearchOpen }) => {
           </Link>
 
           {/* Quick Location (Desktop/Tablet) */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 max-w-[150px] truncate cursor-pointer hover:text-amber-700 dark:hover:text-amber-400 transition-colors">
-            <MapPin size={14} className="text-amber-700 dark:text-amber-400 flex-shrink-0" />
-            <span className="truncate">{selectedLocation}</span>
+          <div 
+            onClick={handleDetectHeaderLocation}
+            title="Click to auto-detect current location"
+            className="hidden md:flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 max-w-[170px] truncate cursor-pointer hover:text-amber-700 dark:hover:text-amber-400 transition-colors"
+          >
+            <MapPin size={14} className={`text-amber-700 dark:text-amber-400 flex-shrink-0 ${detectingLoc ? 'animate-bounce' : ''}`} />
+            <span className="truncate">{detectingLoc ? 'Detecting...' : (userLocation || selectedLocation)}</span>
           </div>
 
           {/* Search Trigger Bar (Simulates search bar in header) */}
