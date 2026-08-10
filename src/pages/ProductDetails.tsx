@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCompare } from '../context/CompareContext';
 import { useNotifications } from '../context/NotificationContext';
-import { getDetailsUrl, getThumbnailUrl } from '../services/cloudinaryService';
+import { getDetailsUrl, getThumbnailUrl, FALLBACK_PRODUCT_IMAGE } from '../services/cloudinaryService';
 import { ProductCard } from '../components/product/ProductCard';
 import { Dialog } from '../components/common/Dialog';
 import { useLanguage } from '../context/LanguageContext';
@@ -227,6 +227,9 @@ export const ProductDetails: React.FC = () => {
             <img 
               src={getDetailsUrl(activeImage)} 
               alt={product.name} 
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE;
+              }}
               className="w-full h-full object-cover"
             />
             {/* Zoom Action overlay */}
@@ -255,6 +258,9 @@ export const ProductDetails: React.FC = () => {
                   <img 
                     src={getThumbnailUrl(img)} 
                     alt={`thumbnail-${idx}`} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE;
+                    }}
                     className="w-full h-full object-cover" 
                   />
                 </button>

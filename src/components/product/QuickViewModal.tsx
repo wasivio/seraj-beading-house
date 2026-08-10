@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, ShoppingBag, ArrowRight } from 'lucide-react';
 import type { Product } from '../../types';
+import { getCardUrl, FALLBACK_PRODUCT_IMAGE } from '../../services/cloudinaryService';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { Dialog } from '../common/Dialog';
@@ -50,8 +51,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
         {/* Left: Image display */}
         <div className="relative aspect-square rounded-2xl bg-stone-50 dark:bg-stone-850 overflow-hidden">
           <img 
-            src={product.mainImage} 
+            src={getCardUrl(product.mainImage)} 
             alt={product.name} 
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE;
+            }}
             className="w-full h-full object-cover"
           />
           {product.discountPercent > 0 && (

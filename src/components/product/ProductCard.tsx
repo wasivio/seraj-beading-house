@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useCompare } from '../../context/CompareContext';
-import { getCardUrl } from '../../services/cloudinaryService';
+import { getCardUrl, FALLBACK_PRODUCT_IMAGE } from '../../services/cloudinaryService';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface ProductCardProps {
@@ -90,17 +90,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
       
       {/* Upper Badging and Image wrapper */}
       <div className="relative aspect-square w-full rounded-2xl bg-stone-50 dark:bg-stone-850 overflow-hidden mb-3">
-        
-        {/* Lazy loading images */}
-        <img 
-          src={cardImage} 
-          alt={product.name}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-        />
+        {/* Clickable Image -> Navigates inside app */}
+        <Link 
+          to={`/product/${product.id}`}
+          className="block w-full h-full"
+        >
+          <img 
+            src={cardImage} 
+            alt={product.name}
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE;
+            }}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          />
+        </Link>
 
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 pointer-events-none">
           {product.discountPercent > 0 && (
             <span className="bg-amber-700/90 text-stone-100 text-[10px] font-sans font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
               {product.discountPercent}% OFF
@@ -149,14 +156,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
         <div className="absolute inset-0 bg-stone-950/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2.5 transition-opacity duration-300 z-10 pointer-events-none group-hover:pointer-events-auto">
           <button
             onClick={() => onQuickView(product)}
-            className="p-2.5 rounded-full bg-white text-stone-900 shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+            className="p-2.5 rounded-full bg-white text-stone-900 shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer pointer-events-auto"
             title="Quick View"
           >
             <Eye size={18} />
           </button>
           <button
             onClick={handleShare}
-            className="p-2.5 rounded-full bg-white text-stone-900 shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+            className="p-2.5 rounded-full bg-white text-stone-900 shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer pointer-events-auto"
             title="Share"
           >
             <Share2 size={18} />
