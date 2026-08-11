@@ -102,7 +102,9 @@ export const Checkout: React.FC = () => {
 
     // Auto-fill form fields
     if (!newAddrName && currentUser?.name) setNewAddrName(currentUser.name);
-    if (!newAddrPhone && currentUser?.phone) setNewAddrPhone(currentUser.phone);
+    if (!newAddrPhone && (currentUser?.mobileNumber || currentUser?.phone)) {
+      setNewAddrPhone(currentUser.mobileNumber || currentUser.phone || '');
+    }
     setNewAddrLine(addr.addressLine || '');
     setNewAddrArea(addr.area || addr.locality || '');
     setNewAddrCity(addr.city || 'Hooghly');

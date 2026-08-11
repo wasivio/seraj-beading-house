@@ -38,43 +38,20 @@ export const FirebaseRepository = {
       });
     },
 
-    async signInWithGoogle() {
-      const user = await AuthService.handleGoogleLogin();
-      if (!user) return null;
-      const firestoreProfile = await AuthService.getUserProfile(user.uid);
-      return {
-        uid: user.uid,
-        name: firestoreProfile?.displayName || user.displayName || 'Customer',
-        email: firestoreProfile?.email || user.email || '',
-        phone: firestoreProfile?.phone || user.phoneNumber || '',
-        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
-      };
+    async registerWithPhonePassword(name: string, phone: string, pass: string) {
+      return AuthService.registerWithPhonePassword(name, phone, pass);
     },
 
-    async signInWithEmail(email: string) {
-      const user = await AuthService.signInWithEmail(email);
-      if (!user) return null;
-      const firestoreProfile = await AuthService.getUserProfile(user.uid);
-      return {
-        uid: user.uid,
-        name: firestoreProfile?.displayName || user.displayName || 'Customer',
-        email: firestoreProfile?.email || user.email || '',
-        phone: firestoreProfile?.phone || user.phoneNumber || '',
-        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
-      };
+    async loginWithPhonePassword(phone: string, pass: string) {
+      return AuthService.loginWithPhonePassword(phone, pass);
     },
 
-    async signInWithPhone(phone: string, otp: string) {
-      const user = await AuthService.signInWithPhone(phone, otp);
-      if (!user) return null;
-      const firestoreProfile = await AuthService.getUserProfile(user.uid);
-      return {
-        uid: user.uid,
-        name: firestoreProfile?.displayName || user.displayName || 'Customer',
-        email: firestoreProfile?.email || user.email || '',
-        phone: firestoreProfile?.phone || phone || '',
-        photoURL: firestoreProfile?.photoURL || user.photoURL || ''
-      };
+    async changePassword(currentPass: string, newPass: string) {
+      return AuthService.changePassword(currentPass, newPass);
+    },
+
+    async getUserProfile(userId: string) {
+      return AuthService.getUserProfile(userId);
     },
 
     async updateUserProfile(userId: string, data: { name?: string; phone?: string; photoURL?: string }) {

@@ -1,24 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { User, LogOut, MapPin, ShoppingBag, Heart, Bell, Edit, Mail, Phone, ChevronRight, Trash2 } from 'lucide-react';
+import { 
+  User as UserIcon, 
+  LogOut, 
+  MapPin, 
+  ShoppingBag, 
+  Heart, 
+  Bell, 
+  Edit, 
+  Mail, 
+  Phone, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  KeyRound, 
+  ShieldCheck, 
+  ChevronRight, 
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  HelpCircle
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { firebaseService } from '../services/firebaseService';
 import { useLanguage } from '../context/LanguageContext';
+import { normalizeIndianPhone, validatePasswordPolicy } from '../utils/phoneUtils';
+import { Dialog } from '../components/common/Dialog';
 import type { Address } from '../types';
 
 export const Profile: React.FC = () => {
-  const { currentUser, isAuthenticated, loginWithGoogle, logout, updateUserProfile } = useAuth();
+  const { currentUser, isAuthenticated, login, register, changePassword, logout, updateUserProfile } = useAuth();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
 
-  // Redirect check
+  // Redirect parameter check (e.g. from checkout)
   const redirectPath = searchParams.get('redirect') || '';
 
-  // Auth screen loading state
+  // Auth screen mode: 'login' or 'register'
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Login Form States
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // Register Form States
+  const [registerName, setRegisterName] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Forgot Password Modal State
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   // Profile Edit states
   const [isEditing, setIsEditing] = useState(false);
@@ -26,6 +65,15 @@ export const Profile: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [avatarError, setAvatarError] = useState(false);
+
+  // Security - Change Password states
+  const [isChangePassOpen, setIsChangePassOpen] = useState(false);
+  const [changingPass, setChangingPass] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
 
   // Default address preview state
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
@@ -57,7 +105,7 @@ export const Profile: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && currentUser) {
       setEditName(currentUser.name || '');
-      setEditPhone(currentUser.phone || '');
+      setEditPhone(currentUser.mobileNumber || currentUser.phone || '');
       
       // Load default address
       firebaseService.firestore.getAddresses().then(list => {
@@ -67,22 +115,117 @@ export const Profile: React.FC = () => {
     }
   }, [isAuthenticated, currentUser]);
 
-  const handleGoogleLogin = async () => {
+  // LOGIN HANDLER
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const phoneVal = loginPhone.trim();
+    const passVal = loginPassword;
+
+    if (!phoneVal) {
+      showToast('Validation Error', 'Please enter your 10-digit mobile number.', 'announcement');
+      return;
+    }
+    if (!passVal) {
+      showToast('Validation Error', 'Please enter your password.', 'announcement');
+      return;
+    }
+
     setAuthLoading(true);
     try {
-      await loginWithGoogle();
-      showToast('Welcome!', 'Logged in successfully with Google.', 'announcement');
+      await login(phoneVal, passVal);
+      showToast('Welcome Back! 👋', 'Logged in successfully.', 'announcement');
       if (redirectPath === 'checkout') {
         navigate('/checkout');
       }
-    } catch (e) {
-      console.error(e);
-      showToast('Error', 'Google authentication failed. Please try again.', 'announcement');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      showToast('Authentication Error', err.message || 'Mobile number or password is incorrect.', 'announcement');
     } finally {
       setAuthLoading(false);
     }
   };
 
+  // REGISTRATION HANDLER
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const nameVal = registerName.trim();
+    const phoneVal = registerPhone.trim();
+    const passVal = registerPassword;
+    const confirmVal = registerConfirmPassword;
+
+    if (!nameVal) {
+      showToast('Validation Error', 'Please enter your full name.', 'announcement');
+      return;
+    }
+
+    const normPhone = normalizeIndianPhone(phoneVal);
+    if (!normPhone.isValid) {
+      showToast('Validation Error', normPhone.error || 'Please enter a valid 10-digit Indian mobile number.', 'announcement');
+      return;
+    }
+
+    const passCheck = validatePasswordPolicy(passVal);
+    if (!passCheck.isValid) {
+      showToast('Weak Password', passCheck.errors[0], 'announcement');
+      return;
+    }
+
+    if (passVal !== confirmVal) {
+      showToast('Password Mismatch', 'Password and Confirm Password do not match.', 'announcement');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await register(nameVal, phoneVal, passVal);
+      showToast('Account Created! 🎉', 'Welcome to Siraj Bedding House.', 'announcement');
+      if (redirectPath === 'checkout') {
+        navigate('/checkout');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      showToast('Registration Error', err.message || 'Failed to create account. Please try again.', 'announcement');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // CHANGE PASSWORD HANDLER
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword) {
+      showToast('Validation Error', 'Please enter your current password.', 'announcement');
+      return;
+    }
+
+    const passCheck = validatePasswordPolicy(newPassword);
+    if (!passCheck.isValid) {
+      showToast('Password Policy', passCheck.errors[0], 'announcement');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      showToast('Password Mismatch', 'New Password and Confirm Password do not match.', 'announcement');
+      return;
+    }
+
+    setChangingPass(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      showToast('Password Updated! 🔒', 'Your password has been changed securely.', 'announcement');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setIsChangePassOpen(false);
+    } catch (err: any) {
+      console.error('Change password error:', err);
+      showToast('Error', err.message || 'Current password is incorrect.', 'announcement');
+    } finally {
+      setChangingPass(false);
+    }
+  };
+
+  // SAVE PROFILE DETAILS HANDLER
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
@@ -103,100 +246,387 @@ export const Profile: React.FC = () => {
     }
   };
 
-  // RENDER: GUEST ACCESS / SIGN-IN VIEW (GOOGLE ONLY)
+  // =========================================================================
+  // GUEST VIEW: MOBILE + PASSWORD AUTHENTICATION (NO OTP, NO GOOGLE)
+  // =========================================================================
   if (!isAuthenticated || !currentUser) {
     return (
-      <div className="flex flex-col gap-6 max-w-md mx-auto items-center pt-8 px-2">
+      <div className="flex flex-col gap-6 max-w-md mx-auto items-center pt-6 px-3">
         
-        {/* Logo */}
+        {/* Store Logo */}
         <div className="relative">
           <img 
             src="/logo.jpg" 
             alt="Siraj Bedding House" 
             className="w-20 h-20 rounded-full object-cover border-2 border-amber-700/40 shadow-xl"
           />
-          <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-stone-900 flex items-center justify-center text-[10px] text-white">✓</span>
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-600 rounded-full border-2 border-stone-900 flex items-center justify-center text-[9px] text-white font-bold">SB</span>
         </div>
 
-        {/* Title */}
-        <div className="text-center flex flex-col items-center gap-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">{t('secureAccess')}</span>
+        {/* Title & Subtitle */}
+        <div className="text-center flex flex-col items-center gap-1">
+          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">
+            {t('secureAccess')}
+          </span>
           <h2 className="font-sans font-extrabold text-2xl sm:text-3xl tracking-tight text-stone-900 dark:text-stone-100">
-            {redirectPath === 'checkout' ? 'Sign In to Complete Order' : 'Welcome to Siraj Bedding'}
+            {authTab === 'login' ? 'Sign In with Mobile' : 'Create Customer Account'}
           </h2>
-          <p className="font-sans text-xs text-stone-500 dark:text-stone-400 max-w-xs mt-1 leading-relaxed">
-            {redirectPath === 'checkout' 
-              ? 'Sign in securely with your Google account to complete your checkout and track delivery.' 
-              : 'Sign in to access your order history, saved addresses, and exclusive member discounts.'}
+          <p className="font-sans text-xs text-stone-500 dark:text-stone-400 max-w-xs mt-0.5 leading-relaxed">
+            {redirectPath === 'checkout'
+              ? 'Please authenticate with your mobile number to complete your order.'
+              : authTab === 'login'
+              ? 'Access your orders, saved delivery addresses, and customer benefits.'
+              : 'Register with your Indian mobile number and password to start shopping.'}
           </p>
         </div>
 
         {/* Auth Box */}
-        <div className="bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-850/60 rounded-3xl p-6 sm:p-7 shadow-xl w-full flex flex-col gap-5 text-center">
+        <div className="bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-850/60 rounded-3xl p-6 sm:p-7 shadow-xl w-full flex flex-col gap-5">
           
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs font-semibold text-stone-600 dark:text-stone-300">
-              Instant 1-Tap Google Sign-In
-            </span>
-            <p className="text-[11px] text-stone-400 dark:text-stone-500 leading-relaxed">
-              No passwords to remember. One-click secure authentication.
-            </p>
+          {/* Switch Tabs: Sign In / Register */}
+          <div className="flex bg-stone-100 dark:bg-stone-850 p-1 rounded-2xl border border-stone-200/50 dark:border-stone-800">
+            <button
+              type="button"
+              onClick={() => setAuthTab('login')}
+              className={`flex-1 py-2.5 text-xs font-sans font-bold rounded-xl transition-all cursor-pointer ${
+                authTab === 'login'
+                  ? 'bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 shadow-sm font-extrabold'
+                  : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthTab('register')}
+              className={`flex-1 py-2.5 text-xs font-sans font-bold rounded-xl transition-all cursor-pointer ${
+                authTab === 'register'
+                  ? 'bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 shadow-sm font-extrabold'
+                  : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
+              }`}
+            >
+              Register
+            </button>
           </div>
 
-          {/* GOOGLE SIGN IN BUTTON */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={authLoading}
-            className="w-full bg-white dark:bg-stone-950 hover:bg-stone-50 dark:hover:bg-stone-900 text-stone-800 dark:text-stone-100 border-2 border-stone-200 dark:border-stone-800 py-3.5 px-4 rounded-2xl font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-3 cursor-pointer shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {authLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                <span>Connecting with Google...</span>
+          {/* LOGIN FORM */}
+          {authTab === 'login' && (
+            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+              
+              {/* Mobile Number */}
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                  Mobile Number
+                </label>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <span className="font-bold text-xs text-amber-700 dark:text-amber-400 mr-2 flex-shrink-0 border-r border-stone-200 dark:border-stone-800 pr-2">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    required
+                    placeholder="9876543210"
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100 font-medium"
+                  />
+                  <Phone size={15} className="text-stone-400 ml-1 flex-shrink-0" />
+                </div>
               </div>
-            ) : (
-              <>
-                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                  />
-                </svg>
-                <span>Continue with Google</span>
-              </>
-            )}
-          </button>
 
-          {/* Privacy Trust Badge */}
+              {/* Password */}
+              <div className="flex flex-col gap-1.5 text-left">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(true)}
+                    className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <Lock size={15} className="text-stone-400 mr-2 flex-shrink-0" />
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    placeholder="Enter your password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1 cursor-pointer"
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLoginPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-luxury-gold hover:opacity-90 active:scale-[0.98] py-3.5 rounded-xl font-sans font-bold text-xs sm:text-sm text-stone-100 mt-2 shadow-md cursor-pointer disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <span>Sign In with Mobile</span>
+                )}
+              </button>
+
+              {/* Bottom switch helper */}
+              <div className="text-center pt-2 text-xs text-stone-500">
+                <span>Don't have an account? </span>
+                <button
+                  type="button"
+                  onClick={() => setAuthTab('register')}
+                  className="font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                >
+                  Register here
+                </button>
+              </div>
+
+            </form>
+          )}
+
+          {/* REGISTRATION FORM */}
+          {authTab === 'register' && (
+            <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
+              
+              {/* Full Name */}
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                  Full Name
+                </label>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <UserIcon size={15} className="text-stone-400 mr-2 flex-shrink-0" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    value={registerName}
+                    onChange={(e) => setRegisterName(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile Number */}
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                  Mobile Number
+                </label>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <span className="font-bold text-xs text-amber-700 dark:text-amber-400 mr-2 flex-shrink-0 border-r border-stone-200 dark:border-stone-800 pr-2">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    required
+                    placeholder="9876543210"
+                    value={registerPhone}
+                    onChange={(e) => setRegisterPhone(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100 font-medium"
+                  />
+                  <Phone size={15} className="text-stone-400 ml-1 flex-shrink-0" />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                  Create Password (min 8 characters)
+                </label>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <Lock size={15} className="text-stone-400 mr-2 flex-shrink-0" />
+                  <input
+                    type={showRegisterPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    placeholder="At least 8 chars (Aa1@)"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                    className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1 cursor-pointer"
+                    aria-label={showRegisterPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showRegisterPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
+                  Confirm Password
+                </label>
+                <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
+                  <Lock size={15} className="text-stone-400 mr-2 flex-shrink-0" />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    placeholder="Repeat your password"
+                    value={registerConfirmPassword}
+                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1 cursor-pointer"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password strength checklist preview */}
+              {registerPassword.length > 0 && (
+                <div className="bg-stone-50 dark:bg-stone-950 p-2.5 rounded-xl border border-stone-200/50 dark:border-stone-850 text-[10px] flex flex-col gap-1 text-left">
+                  <div className="flex items-center gap-1.5">
+                    {registerPassword.length >= 8 ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
+                    <span className={registerPassword.length >= 8 ? 'text-emerald-600 font-medium' : 'text-stone-400'}>8+ characters</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/[A-Z]/.test(registerPassword) && /[a-z]/.test(registerPassword) ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
+                    <span className={/[A-Z]/.test(registerPassword) && /[a-z]/.test(registerPassword) ? 'text-emerald-600 font-medium' : 'text-stone-400'}>Uppercase & lowercase</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/\d/.test(registerPassword) && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(registerPassword) ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
+                    <span className={/\d/.test(registerPassword) && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(registerPassword) ? 'text-emerald-600 font-medium' : 'text-stone-400'}>Number & special symbol</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-luxury-gold hover:opacity-90 active:scale-[0.98] py-3.5 rounded-xl font-sans font-bold text-xs sm:text-sm text-stone-100 mt-2 shadow-md cursor-pointer disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <span>Create Account</span>
+                )}
+              </button>
+
+              {/* Bottom switch helper */}
+              <div className="text-center pt-2 text-xs text-stone-500">
+                <span>Already have an account? </span>
+                <button
+                  type="button"
+                  onClick={() => setAuthTab('login')}
+                  className="font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                >
+                  Sign in here
+                </button>
+              </div>
+
+            </form>
+          )}
+
+          {/* Privacy Security Note */}
           <div className="pt-2 border-t border-stone-100 dark:border-stone-850 flex items-center justify-center gap-1.5 text-[10px] text-stone-400">
-            <span>🔒 End-to-end 256-bit encrypted authentication</span>
+            <ShieldCheck size={13} className="text-emerald-500" />
+            <span>256-bit encrypted credential storage</span>
           </div>
 
         </div>
+
+        {/* FORGOT PASSWORD MODAL */}
+        <Dialog
+          isOpen={isForgotModalOpen}
+          onClose={() => setIsForgotModalOpen(false)}
+          title="Password Assistance"
+          maxWidth="md"
+        >
+          <div className="flex flex-col gap-4 py-2 text-stone-800 dark:text-stone-200">
+            <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-2xl border border-amber-200/50 dark:border-amber-900/40">
+              <HelpCircle size={24} className="text-amber-700 dark:text-amber-400 flex-shrink-0" />
+              <div className="flex flex-col text-left">
+                <span className="font-bold text-xs text-amber-900 dark:text-amber-300">Account Security Policy</span>
+                <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
+                  To protect customer privacy against unauthorized SIM takeovers, password resets are verified directly with store support.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed text-left">
+              Please contact Siraj Bedding House with your registered mobile number to reset your password instantly:
+            </p>
+
+            <div className="flex flex-col gap-2.5 pt-1">
+              <a
+                href="https://wa.me/917352502508?text=Hello%20Siraj%20Bedding%20House,%20I%20forgot%20my%20account%20password.%20My%20mobile%20number%20is:%20"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm cursor-pointer"
+              >
+                <Phone size={14} />
+                <span>Reset via WhatsApp (+91 73525 02508)</span>
+              </a>
+
+              <a
+                href="tel:+919800094590"
+                className="flex items-center justify-center gap-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-750 text-stone-800 dark:text-stone-200 font-bold text-xs py-3 px-4 rounded-xl transition-all border border-stone-200 dark:border-stone-700 cursor-pointer"
+              >
+                <Phone size={14} className="text-amber-600" />
+                <span>Call Store Helpline (+91 98000 94590)</span>
+              </a>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsForgotModalOpen(false)}
+              className="mt-2 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 py-1"
+            >
+              Back to Login
+            </button>
+          </div>
+        </Dialog>
+
       </div>
     );
   }
 
-  // RENDER: LOGGED IN USER PROFILE
+  // =========================================================================
+  // AUTHENTICATED CUSTOMER PROFILE VIEW
+  // =========================================================================
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       
-      {/* Header Cards details */}
+      {/* Header Profile details */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-14 h-14 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden flex items-center justify-center border-2 border-amber-700/20">
+          <div className="w-14 h-14 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden flex items-center justify-center border-2 border-amber-700/20 text-amber-700 dark:text-amber-400 font-extrabold text-lg">
             {currentUser.photoURL && !avatarError ? (
               <img 
                 src={currentUser.photoURL} 
@@ -205,12 +635,19 @@ export const Profile: React.FC = () => {
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <User size={24} className="text-stone-400" />
+              currentUser.name.charAt(0).toUpperCase()
             )}
           </div>
           <div className="flex flex-col text-left">
-            <h3 className="font-sans font-extrabold text-base leading-none">{currentUser.name}</h3>
-            <span className="text-xs text-stone-450 mt-1.5">{currentUser.email || 'No email associated'}</span>
+            <div className="flex items-center gap-2">
+              <h3 className="font-sans font-extrabold text-base leading-none text-stone-900 dark:text-stone-100">{currentUser.name}</h3>
+              <span className="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Active
+              </span>
+            </div>
+            <span className="text-xs text-stone-500 dark:text-stone-400 mt-1 font-mono">
+              {currentUser.normalizedPhone || currentUser.mobileNumber || currentUser.phone || 'No phone registered'}
+            </span>
           </div>
         </div>
 
@@ -219,7 +656,7 @@ export const Profile: React.FC = () => {
             onClick={handleClearDatabase}
             disabled={isClearing}
             className="p-2.5 rounded-full border border-stone-200 dark:border-stone-850 hover:bg-amber-50 hover:text-amber-700 text-stone-400 transition-all cursor-pointer disabled:opacity-50"
-            title="Delete Mock/Fake Data from Firestore"
+            title="Delete Mock Data from Firestore"
           >
             <Trash2 size={16} className={isClearing ? 'animate-pulse' : ''} />
           </button>
@@ -237,68 +674,76 @@ export const Profile: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         
         {/* EDIT PROFILE FORM */}
-        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-50 dark:border-stone-850/30">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 flex items-center gap-1.5">
-              <Edit size={12} />
-              <span>{t('editProfile')}</span>
-            </span>
-            {!isEditing && (
-              <button 
-                onClick={() => setIsEditing(true)}
-                className="text-[10px] font-sans font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
-              >
-                {t('edit')}
-              </button>
+        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-stone-50 dark:border-stone-850/30">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 flex items-center gap-1.5">
+                <Edit size={12} />
+                <span>{t('editProfile')}</span>
+              </span>
+              {!isEditing && (
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="text-[10px] font-sans font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                >
+                  {t('edit')}
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <form onSubmit={handleSaveProfile} className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1 text-xs text-left">
+                  <span className="font-bold text-stone-500">Name</span>
+                  <input
+                    type="text" required
+                    value={editName} onChange={(e) => setEditName(e.target.value)}
+                    className="bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl p-2.5 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 text-xs text-left">
+                  <span className="font-bold text-stone-500">Mobile Number</span>
+                  <input
+                    type="tel"
+                    value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
+                    className="bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl p-2.5 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button" onClick={() => setIsEditing(false)}
+                    className="flex-grow bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 text-xs py-2 rounded-xl"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingProfile}
+                    className="flex-grow bg-luxury-gold hover:opacity-90 disabled:opacity-50 text-stone-100 text-xs py-2 rounded-xl font-bold cursor-pointer transition-opacity"
+                  >
+                    {savingProfile ? 'Saving...' : t('save')}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-col gap-2.5 font-sans text-xs text-left">
+                <div className="flex justify-between">
+                  <span className="text-stone-400">Name</span>
+                  <span className="font-bold text-stone-900 dark:text-stone-100">{currentUser.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-400">Mobile</span>
+                  <span className="font-bold font-mono text-stone-900 dark:text-stone-100">
+                    {currentUser.normalizedPhone || currentUser.mobileNumber || currentUser.phone || 'Not added'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-400">Role</span>
+                  <span className="font-bold capitalize text-amber-700 dark:text-amber-400">{currentUser.role || 'Customer'}</span>
+                </div>
+              </div>
             )}
           </div>
-
-          {isEditing ? (
-            <form onSubmit={handleSaveProfile} className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1 text-xs">
-                <span className="font-bold text-stone-500">Name</span>
-                <input
-                  type="text" required
-                  value={editName} onChange={(e) => setEditName(e.target.value)}
-                  className="bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl p-2.5"
-                />
-              </div>
-              <div className="flex flex-col gap-1 text-xs">
-                <span className="font-bold text-stone-500">Phone Number</span>
-                <input
-                  type="tel"
-                  value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
-                  className="bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 rounded-xl p-2.5"
-                />
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  type="button" onClick={() => setIsEditing(false)}
-                  className="flex-grow bg-stone-105 hover:bg-stone-200 text-xs py-2 rounded-xl animate-none"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="flex-grow bg-luxury-gold hover:opacity-90 disabled:opacity-50 text-stone-100 text-xs py-2 rounded-xl font-bold cursor-pointer transition-opacity"
-                >
-                  {savingProfile ? 'Saving...' : t('save')}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex flex-col gap-2 font-sans text-xs">
-              <div className="flex justify-between">
-                <span className="text-stone-450">Name</span>
-                <span className="font-bold">{currentUser.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-450">Phone</span>
-                <span className="font-bold">{currentUser.phone || 'Not added'}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* DEFAULT ADDRESS PREVIEW */}
@@ -318,18 +763,108 @@ export const Profile: React.FC = () => {
               </p>
             </div>
           ) : (
-            <p className="text-xs text-stone-400 italic flex-grow">No delivery address saved yet.</p>
+            <p className="text-xs text-stone-400 italic flex-grow text-left">No delivery address saved yet.</p>
           )}
 
           <Link
             to="/checkout"
-            className="text-[10px] font-sans font-bold text-amber-707 dark:text-amber-400 hover:underline mt-2 self-start flex items-center gap-1"
+            className="text-[10px] font-sans font-bold text-amber-700 dark:text-amber-400 hover:underline mt-2 self-start flex items-center gap-1"
           >
             <span>{t('addressBook')}</span>
             <ChevronRight size={10} />
           </Link>
         </div>
 
+      </div>
+
+      {/* SECURITY: CHANGE PASSWORD CARD */}
+      <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-3 text-left">
+        <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-850/40 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-xl">
+              <KeyRound size={16} />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm text-stone-900 dark:text-stone-100">Account Security</span>
+              <span className="text-[11px] text-stone-400">Update your account login password</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsChangePassOpen(!isChangePassOpen)}
+            className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+          >
+            {isChangePassOpen ? 'Close' : 'Change Password'}
+          </button>
+        </div>
+
+        {isChangePassOpen && (
+          <form onSubmit={handleChangePasswordSubmit} className="flex flex-col gap-3 pt-2 max-w-md">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-stone-400 font-bold uppercase">Current Password</label>
+              <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
+                <input
+                  type={showCurrentPass ? 'text' : 'password'}
+                  required
+                  placeholder="Current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-transparent border-none outline-none text-stone-900 dark:text-stone-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPass(!showCurrentPass)}
+                  className="text-stone-400 p-1"
+                >
+                  {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-stone-400 font-bold uppercase">New Password (min 8 chars)</label>
+              <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
+                <input
+                  type={showNewPass ? 'text' : 'password'}
+                  required
+                  placeholder="New strong password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-transparent border-none outline-none text-stone-900 dark:text-stone-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  className="text-stone-400 p-1"
+                >
+                  {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-stone-400 font-bold uppercase">Confirm New Password</label>
+              <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
+                <input
+                  type="password"
+                  required
+                  placeholder="Repeat new password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full bg-transparent border-none outline-none text-stone-900 dark:text-stone-100"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={changingPass}
+              className="bg-luxury-gold hover:opacity-90 py-2.5 px-4 rounded-xl font-bold text-xs text-white mt-1 shadow-md cursor-pointer disabled:opacity-50"
+            >
+              {changingPass ? 'Updating Password...' : 'Save New Password'}
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Profile quick links navigation layout */}
@@ -371,7 +906,7 @@ export const Profile: React.FC = () => {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">24/7 Customer Support</span>
-              <h4 className="font-sans font-bold text-sm text-white">Need Help with Your Order?</h4>
+              <h4 className="font-sans font-bold text-sm text-white">Need Help with Your Account or Order?</h4>
             </div>
           </div>
           <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-500/30">
@@ -380,12 +915,12 @@ export const Profile: React.FC = () => {
         </div>
 
         <p className="text-xs text-stone-300 leading-relaxed text-left">
-          Have questions about sizing, custom mattress orders, delivery, or payments? Chat with Siraj Bedding House directly on WhatsApp.
+          Have questions about your account, password, custom mattress sizing, or delivery? Chat with Siraj Bedding House directly on WhatsApp.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-1">
           <a
-            href="https://wa.me/917352502508?text=Hello%20Siraj%20Bedding%20House,%20I%20need%20help%20with%20my%20order/account."
+            href="https://wa.me/917352502508?text=Hello%20Siraj%20Bedding%20House,%20I%20need%20help%20with%20my%20account/order."
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-md cursor-pointer"

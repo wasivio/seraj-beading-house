@@ -159,3 +159,21 @@ export interface Coupon {
   description: string;
   expiryDate: string;
 }
+
+export interface User {
+  uid: string;
+  name: string;
+  displayName?: string;
+  mobileNumber?: string;
+  normalizedPhone?: string;
+  countryCode?: string;
+  email?: string;
+  phone?: string;
+  photoURL?: string | null;
+  role: 'customer' | 'owner' | 'superAdmin' | 'admin' | 'manager' | 'staff';
+  status: 'active' | 'blocked' | 'suspended' | 'deleted';
+  createdAt?: any;
+  updatedAt?: any;
+  lastLoginAt?: any;
+}
+

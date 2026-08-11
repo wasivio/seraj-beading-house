@@ -1,26 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { firebaseService } from '../services/firebaseService';
-import { auth } from '../firebase';
-import { getRedirectResult } from 'firebase/auth';
 import { AuthService } from '../services/AuthService';
-
-interface User {
-  uid?: string;
-  name: string;
-  email: string;
-  phone: string;
-  photoURL?: string;
-}
+import type { User } from '../types';
 
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginWithGoogle: () => Promise<User | null>;
-  loginWithEmail: (email: string) => Promise<User | null>;
-  loginWithPhone: (phone: string, otp: string) => Promise<User | null>;
+  login: (phone: string, pass: string) => Promise<User>;
+  register: (name: string, phone: string, pass: string) => Promise<User>;
+  changePassword: (currentPass: string, newPass: string) => Promise<void>;
   updateUserProfile: (data: { name?: string; phone?: string; photoURL?: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,53 +21,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          const syncedUser = await AuthService.handleGoogleLogin();
-          if (syncedUser) {
-            const firestoreProfile = await AuthService.getUserProfile(syncedUser.uid);
+    const unsubscribe = firebaseService.auth.onAuthStateChanged(async (firebaseUser) => {
+      if (!firebaseUser) {
+        setCurrentUser(null);
+        setIsLoading(false);
+      } else {
+        try {
+          const profile = await AuthService.getUserProfile(firebaseUser.uid);
+          if (profile) {
+            setCurrentUser(profile);
+          } else {
             setCurrentUser({
-              uid: syncedUser.uid,
-              name: firestoreProfile?.displayName || syncedUser.displayName || 'Customer',
-              email: firestoreProfile?.email || syncedUser.email || '',
-              phone: firestoreProfile?.phone || syncedUser.phoneNumber || '',
-              photoURL: firestoreProfile?.photoURL || syncedUser.photoURL || ''
+              uid: firebaseUser.uid,
+              name: firebaseUser.displayName || 'Customer',
+              displayName: firebaseUser.displayName || 'Customer',
+              phone: firebaseUser.phoneNumber || '',
+              mobileNumber: '',
+              normalizedPhone: firebaseUser.phoneNumber || '',
+              countryCode: '+91',
+              email: firebaseUser.email || '',
+              photoURL: firebaseUser.photoURL || null,
+              role: 'customer',
+              status: 'active'
             });
           }
+        } catch (e) {
+          console.warn('Error loading user profile on auth state change:', e);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err: any) {
-        // Suppress benign IndexedDB lifecycle / closing / unauthenticated errors
-        const errMsg = String(err?.message || err || '');
-        if (
-          errMsg.includes('Database is closing') ||
-          errMsg.includes('hidden') ||
-          errMsg.includes('IndexedDB') ||
-          err?.code === 'auth/null-user' ||
-          err?.code === 'auth/no-auth-event'
-        ) {
-          // Normal transient IndexedDB state in browser tabs
-          return;
-        }
-        console.warn('Google redirect check status:', err);
       }
-    };
-
-    checkRedirectResult();
-
-    const unsubscribe = firebaseService.auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async () => {
+  const register = async (name: string, phone: string, pass: string): Promise<User> => {
     setIsLoading(true);
     try {
-      const user = await firebaseService.auth.signInWithGoogle();
+      const user = await AuthService.registerWithPhonePassword(name, phone, pass);
       setCurrentUser(user);
       return user;
     } finally {
@@ -84,10 +67,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithEmail = async (email: string) => {
+  const login = async (phone: string, pass: string): Promise<User> => {
     setIsLoading(true);
     try {
-      const user = await firebaseService.auth.signInWithEmail(email);
+      const user = await AuthService.loginWithPhonePassword(phone, pass);
       setCurrentUser(user);
       return user;
     } finally {
@@ -95,40 +78,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithPhone = async (phone: string, otp: string) => {
-    setIsLoading(true);
-    try {
-      const user = await firebaseService.auth.signInWithPhone(phone, otp);
-      setCurrentUser(user);
-      return user;
-    } finally {
-      setIsLoading(false);
-    }
+  const changePassword = async (currentPass: string, newPass: string): Promise<void> => {
+    await AuthService.changePassword(currentPass, newPass);
   };
 
   const updateUserProfile = async (data: { name?: string; phone?: string; photoURL?: string }) => {
     if (!currentUser?.uid) return;
-    await firebaseService.auth.updateUserProfile(currentUser.uid, data);
+    await AuthService.updateUserProfile(currentUser.uid, data);
     setCurrentUser(prev => prev ? {
       ...prev,
       name: data.name !== undefined ? (data.name || prev.name) : prev.name,
+      displayName: data.name !== undefined ? (data.name || prev.displayName) : prev.displayName,
       phone: data.phone !== undefined ? data.phone : prev.phone,
       photoURL: data.photoURL !== undefined ? data.photoURL : prev.photoURL
     } : null);
   };
 
-  const logout = () => {
-    firebaseService.auth.logout();
+  const logout = async () => {
+    await AuthService.logout();
     setCurrentUser(null);
   };
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     isAuthenticated: !!currentUser,
     isLoading,
-    loginWithGoogle,
-    loginWithEmail,
-    loginWithPhone,
+    login,
+    register,
+    changePassword,
     updateUserProfile,
     logout
   };
