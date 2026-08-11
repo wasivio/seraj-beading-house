@@ -1,5 +1,5 @@
 /**
- * Phone Number & Password Security Utilities for Siraj Bedding House
+ * Phone Number & Password Utilities for Siraj Bedding House
  */
 
 export interface NormalizedPhoneResult {
@@ -85,30 +85,15 @@ export interface PasswordValidationResult {
 }
 
 /**
- * Password Policy Enforcement:
- * - Minimum 8 characters
- * - At least one lowercase letter
- * - At least one uppercase letter
- * - At least one digit
- * - At least one special character
+ * Flexible Password Validation:
+ * Allows any password chosen by the customer (min 6 characters).
+ * No uppercase, number, or special symbol restriction.
  */
 export const validatePasswordPolicy = (password: string): PasswordValidationResult => {
   const errors: string[] = [];
 
-  if (!password || password.length < 8) {
-    errors.push('Password must be at least 8 characters long.');
-  }
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must include at least one lowercase letter.');
-  }
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must include at least one uppercase letter.');
-  }
-  if (!/\d/.test(password)) {
-    errors.push('Password must include at least one number.');
-  }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push('Password must include at least one special character (e.g. @, #, $, %).');
+  if (!password || password.trim().length < 6) {
+    errors.push('Password must be at least 6 characters.');
   }
 
   return {

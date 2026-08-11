@@ -17,8 +17,6 @@ import {
   ShieldCheck, 
   ChevronRight, 
   Trash2,
-  CheckCircle2,
-  XCircle,
   HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -453,7 +451,7 @@ export const Profile: React.FC = () => {
               {/* Password */}
               <div className="flex flex-col gap-1 text-left">
                 <label className="text-[10px] text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">
-                  Create Password (min 8 characters)
+                  Password
                 </label>
                 <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2.5 focus-within:border-amber-600 transition-colors">
                   <Lock size={15} className="text-stone-400 mr-2 flex-shrink-0" />
@@ -461,7 +459,7 @@ export const Profile: React.FC = () => {
                     type={showRegisterPassword ? 'text' : 'password'}
                     autoComplete="new-password"
                     required
-                    placeholder="At least 8 chars (Aa1@)"
+                    placeholder="Enter password (min 6 characters)"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     className="w-full bg-transparent border-none outline-none text-xs text-stone-900 dark:text-stone-100"
@@ -503,24 +501,6 @@ export const Profile: React.FC = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Password strength checklist preview */}
-              {registerPassword.length > 0 && (
-                <div className="bg-stone-50 dark:bg-stone-950 p-2.5 rounded-xl border border-stone-200/50 dark:border-stone-850 text-[10px] flex flex-col gap-1 text-left">
-                  <div className="flex items-center gap-1.5">
-                    {registerPassword.length >= 8 ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
-                    <span className={registerPassword.length >= 8 ? 'text-emerald-600 font-medium' : 'text-stone-400'}>8+ characters</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {/[A-Z]/.test(registerPassword) && /[a-z]/.test(registerPassword) ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
-                    <span className={/[A-Z]/.test(registerPassword) && /[a-z]/.test(registerPassword) ? 'text-emerald-600 font-medium' : 'text-stone-400'}>Uppercase & lowercase</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {/\d/.test(registerPassword) && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(registerPassword) ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-stone-400" />}
-                    <span className={/\d/.test(registerPassword) && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(registerPassword) ? 'text-emerald-600 font-medium' : 'text-stone-400'}>Number & special symbol</span>
-                  </div>
-                </div>
-              )}
 
               {/* Submit Button */}
               <button
@@ -822,12 +802,12 @@ export const Profile: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-stone-400 font-bold uppercase">New Password (min 8 chars)</label>
+              <label className="text-[10px] text-stone-400 font-bold uppercase">New Password (min 6 chars)</label>
               <div className="flex items-center bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-3 py-2 text-xs">
                 <input
                   type={showNewPass ? 'text' : 'password'}
                   required
-                  placeholder="New strong password"
+                  placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full bg-transparent border-none outline-none text-stone-900 dark:text-stone-100"
