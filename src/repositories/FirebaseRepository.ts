@@ -176,6 +176,12 @@ export const FirebaseRepository = {
     requestPermission() {
       return NotificationService.requestPermission();
     },
+    subscribeToFirestoreNotifications(onUpdate: (notifs: any[]) => void) {
+      return NotificationService.subscribeToFirestoreNotifications(onUpdate);
+    },
+    initForegroundMessaging(onMessageReceived: (notif: any) => void) {
+      return NotificationService.initForegroundMessaging(onMessageReceived);
+    },
     triggerAdminPushMessage(title: string, body: string, type: any, link?: string) {
       return NotificationService.triggerAdminPushMessage(title, body, type, link);
     }

@@ -129,10 +129,15 @@ export interface Notification {
   id: string;
   title: string;
   body: string;
-  type: 'offer' | 'product' | 'festival' | 'order' | 'delivery' | 'price_drop' | 'back_in_stock' | 'announcement';
+  type: 'offer' | 'product' | 'festival' | 'order' | 'delivery' | 'price_drop' | 'back_in_stock' | 'announcement' | 'flashSale' | 'flash_sale';
   isRead: boolean;
   createdAt: string;
   link?: string;
+  imageUrl?: string;
+  image?: string;
+  audience?: string;
+  userId?: string;
+  readBy?: string[];
 }
 
 export interface FCMConfig {

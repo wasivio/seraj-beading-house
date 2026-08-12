@@ -6,6 +6,7 @@ import { ScrollToTop } from '../common/ScrollToTop';
 import { SearchModal } from '../common/SearchModal';
 import { PullToRefresh } from '../common/PullToRefresh';
 import { CompareFloatingBar } from '../product/CompareFloatingBar';
+import { NotificationPromptModal } from '../common/NotificationPromptModal';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -29,6 +30,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* Global Toast Alerts */}
       <ToastContainer />
+
+      {/* Global Notification Permission Prompt Modal */}
+      <NotificationPromptModal />
 
       {/* Instant Search Drawer */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

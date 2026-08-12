@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
-import { Bell, Sliders } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Bell, 
+  Sliders, 
+  Tag, 
+  Sparkles, 
+  Package, 
+  Truck, 
+  Percent, 
+  ExternalLink,
+  CheckCheck
+} from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
+import type { Notification } from '../types';
 
 export const Notifications: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
@@ -37,42 +50,96 @@ export const Notifications: React.FC = () => {
     saveFCMConfig(updated);
   };
 
+  const handleNotificationClick = (notif: Notification) => {
+    markNotificationAsRead(notif.id);
+    if (notif.link) {
+      if (notif.link.startsWith('http')) {
+        window.open(notif.link, '_blank');
+      } else {
+        navigate(notif.link);
+      }
+    }
+  };
+
+  const getNotifIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'offer':
+      case 'flashSale':
+      case 'price_drop':
+        return <Percent size={18} className="text-amber-600 dark:text-amber-400" />;
+      case 'festival':
+        return <Sparkles size={18} className="text-purple-600 dark:text-purple-400" />;
+      case 'order':
+        return <Package size={18} className="text-blue-600 dark:text-blue-400" />;
+      case 'delivery':
+        return <Truck size={18} className="text-emerald-600 dark:text-emerald-400" />;
+      case 'product':
+      case 'back_in_stock':
+        return <Tag size={18} className="text-rose-600 dark:text-rose-400" />;
+      default:
+        return <Bell size={18} className="text-amber-700 dark:text-amber-400" />;
+    }
+  };
+
+  const getNotifBadge = (type: Notification['type']) => {
+    switch (type) {
+      case 'offer':
+      case 'flashSale':
+        return 'Flash Offer';
+      case 'festival':
+        return 'Festival Special';
+      case 'order':
+        return 'Order Alert';
+      case 'delivery':
+        return 'Delivery Update';
+      case 'product':
+        return 'New Arrival';
+      case 'price_drop':
+        return 'Price Drop';
+      default:
+        return 'Announcement';
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       
       {/* Title */}
       <div className="flex items-center justify-between">
-        <div className="flex flex-col">
+        <div className="flex flex-col text-left">
           <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">Communication Desk</span>
           <h2 className="font-sans font-extrabold text-2xl sm:text-3xl mt-0.5 tracking-tight">{t('notifications')}</h2>
         </div>
         {unreadCount > 0 && activeTab === 'list' && (
           <button
             onClick={markAllNotificationsAsRead}
-            className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+            className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/20 px-3 py-1.5 rounded-xl border border-amber-200/40 dark:border-amber-800/40"
           >
-            {t('markAllRead')}
+            <CheckCheck size={14} />
+            <span>{t('markAllRead')}</span>
           </button>
         )}
       </div>
 
-      {/* Permission Popup trigger if Default */}
-      {fcmConfig.permission === 'default' && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      {/* Permission Box if not granted */}
+      {fcmConfig.permission !== 'granted' && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-600/30 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm text-left">
           <div className="flex items-start gap-3">
-            <Bell size={20} className="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="p-2.5 bg-amber-600 text-white rounded-2xl flex-shrink-0">
+              <Bell size={20} />
+            </div>
             <div className="flex flex-col">
-              <h4 className="font-sans font-bold text-xs">Enable Push Notifications</h4>
-              <p className="font-sans text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed mt-0.5">
-                Receive real-time order tracking updates, back-in-stock alerts, and custom discount codes directly.
+              <h4 className="font-sans font-bold text-sm text-stone-900 dark:text-stone-100">Enable Device Notifications</h4>
+              <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed mt-0.5">
+                Receive live order tracking status, flash sales, festival offers, and exclusive discount codes directly on this device.
               </p>
             </div>
           </div>
           <button
             onClick={requestNotificationPermission}
-            className="bg-luxury-gold hover:opacity-90 py-2 px-4 rounded-xl text-stone-100 font-sans font-bold text-xs cursor-pointer shadow-md self-start sm:self-center flex-shrink-0"
+            className="bg-luxury-gold hover:opacity-90 active:scale-[0.98] py-2.5 px-5 rounded-xl text-stone-100 font-sans font-bold text-xs cursor-pointer shadow-md self-start sm:self-center flex-shrink-0 whitespace-nowrap transition-all"
           >
-            Enable Now
+            Allow Notifications
           </button>
         </div>
       )}
@@ -104,42 +171,70 @@ export const Notifications: React.FC = () => {
               </div>
               <h4 className="font-sans font-bold text-base">{t('noNotifications')}</h4>
               <p className="font-sans text-xs text-stone-500 dark:text-stone-400">
-                You have no new alerts in your notification queue.
+                You have no active alerts. Admin FMC broadcasts and order updates will appear here in real-time.
               </p>
             </div>
           ) : (
             notifications.map((notif) => (
               <div
                 key={notif.id}
-                onClick={() => markNotificationAsRead(notif.id)}
-                className={`p-4 rounded-2xl border transition-all relative flex gap-3.5 cursor-pointer ${
+                onClick={() => handleNotificationClick(notif)}
+                className={`p-4 sm:p-5 rounded-2xl border transition-all relative flex flex-col gap-3 cursor-pointer ${
                   notif.isRead
-                    ? 'bg-white dark:bg-stone-900 border-stone-200/40 dark:border-stone-850/30 opacity-75'
-                    : 'bg-amber-50/10 dark:bg-amber-950/10 border-amber-600/30'
+                    ? 'bg-white dark:bg-stone-900 border-stone-200/40 dark:border-stone-850/30 opacity-80'
+                    : 'bg-white dark:bg-stone-900 border-amber-600/40 shadow-sm ring-1 ring-amber-600/10'
                 }`}
               >
-                {/* Visual Unread dot */}
-                {!notif.isRead && (
-                  <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-amber-700 animate-pulse" />
-                )}
+                <div className="flex items-start gap-3.5">
+                  {/* Left icon wrapper */}
+                  <div className="p-2.5 rounded-2xl bg-amber-50 dark:bg-stone-800 h-max flex-shrink-0 border border-amber-200/40 dark:border-stone-700/50">
+                    {getNotifIcon(notif.type)}
+                  </div>
 
-                {/* Left icon wrapper */}
-                <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-500 dark:text-stone-400 h-max flex-shrink-0">
-                  <Bell size={16} />
+                  {/* Body details */}
+                  <div className="flex-grow flex flex-col gap-1 text-left">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[9px] uppercase font-extrabold tracking-wider bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md">
+                        {getNotifBadge(notif.type)}
+                      </span>
+                      {!notif.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
+                      )}
+                    </div>
+
+                    <h4 className="font-sans font-bold text-xs sm:text-sm text-stone-900 dark:text-stone-100 mt-0.5">
+                      {notif.title}
+                    </h4>
+                    
+                    <p className="font-sans text-xs text-stone-600 dark:text-stone-300 leading-relaxed whitespace-pre-line">
+                      {notif.body}
+                    </p>
+
+                    {/* Image preview if provided by admin */}
+                    {notif.imageUrl && (
+                      <div className="mt-2 rounded-xl overflow-hidden max-h-48 w-full border border-stone-200/50 dark:border-stone-800">
+                        <img 
+                          src={notif.imageUrl} 
+                          alt="Notification banner" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-100 dark:border-stone-850/50 text-[10px] text-stone-400">
+                      <span>
+                        {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(notif.createdAt).toLocaleDateString()}
+                      </span>
+                      {notif.link && (
+                        <span className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1 hover:underline">
+                          <span>View Details</span>
+                          <ExternalLink size={10} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Body details */}
-                <div className="flex-grow flex flex-col gap-1 pr-6 text-left">
-                  <h4 className="font-sans font-bold text-xs sm:text-sm text-stone-900 dark:text-stone-100">
-                    {notif.title}
-                  </h4>
-                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-                    {notif.body}
-                  </p>
-                  <span className="text-[9px] text-stone-400 mt-1">
-                    {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(notif.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
               </div>
             ))
           )}
@@ -148,14 +243,14 @@ export const Notifications: React.FC = () => {
 
       {/* TAB CONTENT: SETTINGS PREFERENCES */}
       {activeTab === 'settings' && (
-        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-6">
+        <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm flex flex-col gap-6 text-left">
           <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-850 pb-4">
             <div className="flex flex-col">
-              <span className="font-bold text-sm flex items-center gap-1.5">
+              <span className="font-bold text-sm flex items-center gap-1.5 text-stone-900 dark:text-stone-100">
                 <Sliders size={16} className="text-amber-700 dark:text-amber-400" />
-                <span>Allow Notifications</span>
+                <span>Allow Push Notifications</span>
               </span>
-              <p className="text-xs text-stone-400 mt-0.5">Toggle push alerts and updates on this device.</p>
+              <p className="text-xs text-stone-400 mt-0.5">Toggle push alerts and live updates on this device.</p>
             </div>
             <button
               onClick={handleToggleGlobal}
@@ -184,7 +279,7 @@ export const Notifications: React.FC = () => {
               ] as const).map(item => (
                 <div key={item.key} className="flex items-center justify-between text-xs py-1">
                   <div className="flex flex-col pr-6">
-                    <span className="font-bold">{item.label}</span>
+                    <span className="font-bold text-stone-800 dark:text-stone-200">{item.label}</span>
                     <span className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">{item.desc}</span>
                   </div>
                   <button

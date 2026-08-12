@@ -8,6 +8,7 @@ export interface ToastMessage {
   body: string;
   type: Notification['type'];
   link?: string;
+  imageUrl?: string;
 }
 
 interface NotificationContextType {
@@ -15,13 +16,15 @@ interface NotificationContextType {
   unreadCount: number;
   fcmConfig: FCMConfig;
   activeToasts: ToastMessage[];
+  showPermissionPrompt: boolean;
+  setShowPermissionPrompt: (show: boolean) => void;
   requestNotificationPermission: () => Promise<'granted' | 'denied'>;
   saveFCMConfig: (config: FCMConfig) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   triggerAdminPush: (title: string, body: string, type: Notification['type'], link?: string) => void;
   dismissToast: (id: string) => void;
-  showToast: (title: string, body: string, type: Notification['type'], link?: string) => void;
+  showToast: (title: string, body: string, type: Notification['type'], link?: string, imageUrl?: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -31,51 +34,80 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [unreadCount, setUnreadCount] = useState(0);
   const [fcmConfig, setFcmConfig] = useState<FCMConfig>(() => firebaseService.fcm.getFCMConfig());
   const [activeToasts, setActiveToasts] = useState<ToastMessage[]>([]);
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState<boolean>(false);
 
-  const syncNotifications = () => {
-    setNotifications(firebaseService.fcm.getNotificationHistory());
-    setUnreadCount(firebaseService.fcm.getUnreadCount());
-    setFcmConfig(firebaseService.fcm.getFCMConfig());
+  const refreshUnreadCount = (notifs: Notification[]) => {
+    setUnreadCount(notifs.filter(n => !n.isRead).length);
   };
 
   useEffect(() => {
-    // Initial fetch
-    syncNotifications();
+    // 1. Initial configuration check
+    const currentConfig = firebaseService.fcm.getFCMConfig();
+    setFcmConfig(currentConfig);
 
-    // Listen for mock DB sync events
-    window.addEventListener('notif_history_sync', syncNotifications);
-    window.addEventListener('fcm_settings_sync', syncNotifications);
+    // 2. Check if customer should be prompted for permission
+    if (
+      typeof window !== 'undefined' && 
+      'Notification' in window && 
+      Notification.permission === 'default'
+    ) {
+      const dismissed = sessionStorage.getItem('siraj_notif_prompt_dismissed');
+      if (!dismissed) {
+        // Show prompt after a slight polite delay (1.5s)
+        const timer = setTimeout(() => {
+          setShowPermissionPrompt(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
 
-    // Listen to custom simulated FCM push receive event
+  useEffect(() => {
+    // 3. Realtime Firestore Notifications Subscription (catches all Admin FMC broadcasts)
+    const unsubscribeFirestore = firebaseService.fcm.subscribeToFirestoreNotifications((updatedNotifs) => {
+      setNotifications(updatedNotifs);
+      refreshUnreadCount(updatedNotifs);
+    });
+
+    // 4. Foreground FCM push listener
+    const unsubscribeForeground = firebaseService.fcm.initForegroundMessaging((notif) => {
+      // Play audio chime
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(() => {});
+
+      // Show live in-app toast
+      showToast(notif.title, notif.body, notif.type, notif.link, notif.imageUrl);
+    });
+
+    // 5. Custom event listener for incoming pushes
     const handlePushReceived = (e: Event) => {
       const customEvent = e as CustomEvent<Notification>;
       const notif = customEvent.detail;
-      
-      // Play premium notification chime sound
-      const audio = new Audio('/notification.mp3');
-      audio.play().catch(err => console.log('Audio playback blocked by browser:', err));
+      if (!notif) return;
 
-      // Add a popup toast message to screen
-      showToast(notif.title, notif.body, notif.type, notif.link);
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(() => {});
+
+      showToast(notif.title, notif.body, notif.type, notif.link, notif.imageUrl);
     };
 
     window.addEventListener('fcm_push_received', handlePushReceived);
 
     return () => {
-      window.removeEventListener('notif_history_sync', syncNotifications);
-      window.removeEventListener('fcm_settings_sync', syncNotifications);
+      unsubscribeFirestore();
+      if (unsubscribeForeground) unsubscribeForeground();
       window.removeEventListener('fcm_push_received', handlePushReceived);
     };
   }, []);
 
-  const showToast = (title: string, body: string, type: Notification['type'], link?: string) => {
-    const id = `toast-${Date.now()}`;
-    setActiveToasts(prev => [...prev, { id, title, body, type, link }]);
+  const showToast = (title: string, body: string, type: Notification['type'], link?: string, imageUrl?: string) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    setActiveToasts(prev => [...prev, { id, title, body, type, link, imageUrl }]);
 
-    // Auto dismiss after 5 seconds
+    // Auto dismiss after 6 seconds
     setTimeout(() => {
       dismissToast(id);
-    }, 5000);
+    }, 6000);
   };
 
   const dismissToast = (id: string) => {
@@ -83,24 +115,36 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const requestNotificationPermission = async (): Promise<'granted' | 'denied'> => {
+    setShowPermissionPrompt(false);
     const res = await firebaseService.fcm.requestPermission();
-    syncNotifications();
+    setFcmConfig(firebaseService.fcm.getFCMConfig());
+    if (res === 'granted') {
+      showToast('Notifications Enabled! 🔔', 'You will now receive order updates and exclusive deals.', 'offer');
+    }
     return res === 'granted' ? 'granted' : 'denied';
   };
 
   const saveFCMConfig = (config: FCMConfig) => {
     firebaseService.fcm.saveFCMConfig(config);
-    syncNotifications();
+    setFcmConfig(config);
   };
 
   const markNotificationAsRead = (id: string) => {
     firebaseService.fcm.markAsRead(id);
-    syncNotifications();
+    setNotifications(prev => {
+      const next = prev.map(n => n.id === id ? { ...n, isRead: true } : n);
+      refreshUnreadCount(next);
+      return next;
+    });
   };
 
   const markAllNotificationsAsRead = () => {
     firebaseService.fcm.markAllAsRead();
-    syncNotifications();
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, isRead: true }));
+      refreshUnreadCount(next);
+      return next;
+    });
   };
 
   const triggerAdminPush = (title: string, body: string, type: Notification['type'], link?: string) => {
@@ -114,6 +158,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         unreadCount,
         fcmConfig,
         activeToasts,
+        showPermissionPrompt,
+        setShowPermissionPrompt,
         requestNotificationPermission,
         saveFCMConfig,
         markNotificationAsRead,
