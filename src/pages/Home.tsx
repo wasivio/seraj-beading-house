@@ -14,6 +14,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useProductsQuery } from '../hooks/useProductsQuery';
 import { useCategoriesQuery } from '../hooks/useCategoriesQuery';
 import { useBrandsQuery } from '../hooks/useBrandsQuery';
+import { extractProductCategoryName, matchesCategory } from '../utils/categoryUtils';
 
 export const Home: React.FC = () => {
   const { data: products = [], refetch: refetchProducts } = useProductsQuery();
@@ -31,19 +32,6 @@ export const Home: React.FC = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (products.length > 0) {
-      const local = localStorage.getItem('siraj_recently_viewed');
-      if (local) {
-        const ids: string[] = JSON.parse(local);
-        const recents = ids
-          .map(rid => products.find(p => p.id === rid))
-          .filter((p): p is Product => !!p);
-        setRecentlyViewed(recents);
-      }
-    }
-  }, [products]);
-
-  useEffect(() => {
     const handleRefresh = () => {
       refetchProducts();
       refetchCategories();
@@ -53,19 +41,32 @@ export const Home: React.FC = () => {
     return () => window.removeEventListener('app_refresh_trigger', handleRefresh);
   }, [refetchProducts, refetchCategories, refetchBrands]);
 
-  const handleQuickView = (product: Product) => {
-    setSelectedProduct(product);
+  // Sync recently viewed
+  useEffect(() => {
+    const stored = localStorage.getItem('siraj_recent_views');
+    if (stored) {
+      try {
+        const ids: string[] = JSON.parse(stored);
+        const matches = ids
+          .map(id => products.find(p => p.id === id))
+          .filter((p): p is Product => !!p);
+        setRecentlyViewed(matches);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [products]);
+
+  const handleQuickView = (prod: Product) => {
+    setSelectedProduct(prod);
     setIsQuickViewOpen(true);
   };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !email.includes('@')) {
-      showToast('Invalid Email', 'Please enter a valid email address.', 'announcement');
-      return;
-    }
+    if (!email) return;
     setSubscribed(true);
-    showToast('Subscribed! ✉️', 'Thank you for subscribing to Siraj Bedding House newsletter.', 'announcement');
+    showToast('Subscribed! 🎉', 'You have been added to our VIP newsletter list.', 'offer');
     setEmail('');
   };
 
@@ -88,14 +89,14 @@ export const Home: React.FC = () => {
   // Dynamic Categories shelf: Load from direct categories collection, fallback to derived categories
   const categoriesList = dbCategories.length > 0 ? dbCategories.map(c => ({
     id: c.id,
-    name: c.name || '',
-    slug: c.slug || c.id,
-    image: c.image || c.imageUrl || 'https://via.placeholder.com/150'
-  })) : Array.from(new Set(products.map(p => p.category?.trim()).filter(Boolean))).map(cat => ({
+    name: c.name || c.title || '',
+    slug: c.slug || c.name || c.id,
+    image: c.image || c.imageUrl || c.icon || products.find(p => matchesCategory(p, c.name || c.id, dbCategories))?.mainImage || 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=300'
+  })) : Array.from(new Set(products.map(p => extractProductCategoryName(p)).filter(Boolean))).map(cat => ({
     id: cat.toLowerCase(),
     name: cat,
     slug: cat.toLowerCase(),
-    image: products.find(p => p.category === cat)?.mainImage || 'https://via.placeholder.com/150'
+    image: products.find(p => matchesCategory(p, cat, []))?.mainImage || 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=300'
   }));
 
   return (

@@ -13,6 +13,7 @@ import { Dialog } from '../components/common/Dialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useProductDetailsQuery } from '../hooks/useProductDetailsQuery';
+import { matchesCategory } from '../utils/categoryUtils';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +71,7 @@ export const ProductDetails: React.FC = () => {
         setReviews(revs);
 
         const allProds = await firebaseService.firestore.getProducts();
-        setRelatedProducts(allProds.filter(p => p.category === prod.category && p.id !== prod.id).slice(0, 4));
+        setRelatedProducts(allProds.filter(p => matchesCategory(p, prod.category) && p.id !== prod.id).slice(0, 4));
 
         saveRecentlyViewed(prod, allProds);
       } catch (err) {

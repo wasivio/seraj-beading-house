@@ -7,14 +7,50 @@ export const ProductService = {
     await this.seedDatabaseIfNeeded();
     const colRef = collection(db, 'products');
     const snap = await getDocs(colRef);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+    return snap.docs.map(d => {
+      const data: any = d.data();
+      let categoryStr = '';
+      if (typeof data.category === 'string') {
+        categoryStr = data.category.trim();
+      } else if (data.category && typeof data.category === 'object') {
+        categoryStr = data.category.name || data.category.title || data.category.label || data.category.id || '';
+      } else if (typeof data.categoryName === 'string') {
+        categoryStr = data.categoryName.trim();
+      } else if (typeof data.categoryTitle === 'string') {
+        categoryStr = data.categoryTitle.trim();
+      }
+
+      return {
+        id: d.id,
+        ...data,
+        category: categoryStr || data.category || 'General',
+        categoryId: data.categoryId || (data.category && typeof data.category === 'object' ? data.category.id : '') || ''
+      } as Product;
+    });
   },
 
   async getProductById(id: string): Promise<Product | null> {
     const docRef = doc(db, 'products', id);
     const snap = await getDoc(docRef);
     if (!snap.exists()) return null;
-    return { id: snap.id, ...snap.data() } as Product;
+    const data: any = snap.data();
+    let categoryStr = '';
+    if (typeof data.category === 'string') {
+      categoryStr = data.category.trim();
+    } else if (data.category && typeof data.category === 'object') {
+      categoryStr = data.category.name || data.category.title || data.category.label || data.category.id || '';
+    } else if (typeof data.categoryName === 'string') {
+      categoryStr = data.categoryName.trim();
+    } else if (typeof data.categoryTitle === 'string') {
+      categoryStr = data.categoryTitle.trim();
+    }
+
+    return {
+      id: snap.id,
+      ...data,
+      category: categoryStr || data.category || 'General',
+      categoryId: data.categoryId || (data.category && typeof data.category === 'object' ? data.category.id : '') || ''
+    } as Product;
   },
 
   async getReviewsByProductId(productId: string): Promise<Review[]> {

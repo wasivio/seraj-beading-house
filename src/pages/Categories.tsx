@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { SlidersHorizontal, ArrowUpDown, X, AlertCircle, Grid, List } from 'lucide-react';
 import { ProductCard } from '../components/product/ProductCard';
@@ -6,18 +6,24 @@ import { QuickViewModal } from '../components/product/QuickViewModal';
 import type { Product } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useProductsQuery } from '../hooks/useProductsQuery';
+import { useCategoriesQuery } from '../hooks/useCategoriesQuery';
+import { matchesCategory, extractProductCategoryName, toCleanAlphanumeric } from '../utils/categoryUtils';
 
 export const Categories: React.FC = () => {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: products = [], isLoading: loading, refetch } = useProductsQuery();
+  const { data: products = [], isLoading: loading, refetch: refetchProducts } = useProductsQuery();
+  const { data: dbCategories = [], refetch: refetchCategories } = useCategoriesQuery();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const handleRefresh = () => refetch();
+    const handleRefresh = () => {
+      refetchProducts();
+      refetchCategories();
+    };
     window.addEventListener('app_refresh_trigger', handleRefresh);
     return () => window.removeEventListener('app_refresh_trigger', handleRefresh);
-  }, [refetch]);
+  }, [refetchProducts, refetchCategories]);
 
   // Filter Drawer states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -66,6 +72,34 @@ export const Categories: React.FC = () => {
     }
   }, [urlCategory, urlBrand]);
 
+  // Extract combined unique categories from dbCategories collection AND products
+  const uniqueCategories = useMemo(() => {
+    const list: string[] = [];
+    const seen = new Set<string>();
+
+    // 1. First add all categories created in Firestore
+    for (const c of dbCategories) {
+      const name = (c.name || c.title || c.slug || '').trim();
+      const clean = toCleanAlphanumeric(name);
+      if (name && clean && !seen.has(clean)) {
+        seen.add(clean);
+        list.push(name);
+      }
+    }
+
+    // 2. Then add any category mentioned on existing products
+    for (const p of products) {
+      const catName = extractProductCategoryName(p);
+      const clean = toCleanAlphanumeric(catName);
+      if (catName && clean && !seen.has(clean)) {
+        seen.add(clean);
+        list.push(catName);
+      }
+    }
+
+    return list;
+  }, [dbCategories, products]);
+
   // Apply filters and sorting
   useEffect(() => {
     let result = [...products];
@@ -76,20 +110,20 @@ export const Categories: React.FC = () => {
       result = result.filter(
         p =>
           p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
+          (p.brand && p.brand.toLowerCase().includes(q)) ||
+          extractProductCategoryName(p).toLowerCase().includes(q) ||
+          (p.description && p.description.toLowerCase().includes(q))
       );
     }
 
-    // 2. Category Filter
+    // 2. Robust Category Filter (handles admin-created categories, slugs, IDs & names)
     if (selectedCategory && selectedCategory !== 'all') {
-      result = result.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+      result = result.filter(p => matchesCategory(p, selectedCategory, dbCategories));
     }
 
     // 3. Brand Filter
     if (selectedBrand && selectedBrand !== 'all') {
-      result = result.filter(p => p.brand.toLowerCase() === selectedBrand.toLowerCase());
+      result = result.filter(p => p.brand && p.brand.toLowerCase() === selectedBrand.toLowerCase());
     }
 
     // 4. URL badge filters (trending / best sellers)
@@ -119,17 +153,17 @@ export const Categories: React.FC = () => {
 
     // Material Filter
     if (selectedMaterial && selectedMaterial !== 'all') {
-      result = result.filter(p => p.material.toLowerCase() === selectedMaterial.toLowerCase());
+      result = result.filter(p => p.material && p.material.toLowerCase() === selectedMaterial.toLowerCase());
     }
 
     // Color Filter
     if (selectedColor && selectedColor !== 'all') {
-      result = result.filter(p => p.color.some(c => c.toLowerCase() === selectedColor.toLowerCase()));
+      result = result.filter(p => p.color && p.color.some(c => c.toLowerCase() === selectedColor.toLowerCase()));
     }
 
     // Size Filter
     if (selectedSize && selectedSize !== 'all') {
-      result = result.filter(p => p.size.some(s => s.toLowerCase() === selectedSize.toLowerCase()));
+      result = result.filter(p => p.size && p.size.some(s => s.toLowerCase() === selectedSize.toLowerCase()));
     }
 
     // 9. Sorting Actions
@@ -153,11 +187,30 @@ export const Categories: React.FC = () => {
     setVisibleCount(8);
 
     setFilteredProducts(result);
-  }, [products, urlSearch, selectedCategory, selectedBrand, urlFilter, maxPrice, minRating, inStockOnly, minDiscount, sortBy, selectedMaterial, selectedColor, selectedSize]);
+  }, [products, dbCategories, urlSearch, selectedCategory, selectedBrand, urlFilter, maxPrice, minRating, inStockOnly, minDiscount, sortBy, selectedMaterial, selectedColor, selectedSize]);
 
   const handleQuickView = (product: Product) => {
     setSelectedProduct(product);
     setIsQuickViewOpen(true);
+  };
+
+  const handleSelectCategoryTab = (catName: string) => {
+    if (catName === selectedCategory || (catName === 'all' && selectedCategory === 'all')) {
+      setSelectedCategory('all');
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('category');
+        return next;
+      });
+    } else {
+      setSelectedCategory(catName);
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (catName === 'all') next.delete('category');
+        else next.set('category', catName);
+        return next;
+      });
+    }
   };
 
   const clearAllFilters = () => {
@@ -177,8 +230,7 @@ export const Categories: React.FC = () => {
     setSearchParams({});
   };
 
-  // Extract unique brands, materials, colors, and sizes present in the product database
-  const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+  // Extract unique brands, materials, colors, and sizes
   const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
   const uniqueMaterials = Array.from(new Set(products.map(p => p.material).filter(Boolean)));
   const uniqueColors = Array.from(new Set(products.flatMap(p => p.color || []).filter(Boolean)));
@@ -197,8 +249,38 @@ export const Categories: React.FC = () => {
           <span className="text-xs text-stone-400 font-sans mt-1">{filteredProducts.length} items found</span>
         </div>
 
+        {/* Horizontal Category Pill Selector for 1-Tap Category Switching */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+          <button
+            onClick={() => handleSelectCategoryTab('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+              selectedCategory === 'all'
+                ? 'bg-amber-700 text-white border-amber-700 shadow-sm'
+                : 'bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-850'
+            }`}
+          >
+            All Items
+          </button>
+          {uniqueCategories.map((cat, idx) => {
+            const isActive = matchesCategory({ category: cat }, selectedCategory, dbCategories);
+            return (
+              <button
+                key={idx}
+                onClick={() => handleSelectCategoryTab(cat)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+                  isActive
+                    ? 'bg-amber-700 text-white border-amber-700 shadow-sm'
+                    : 'bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-850'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Action Bar */}
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-stone-200/40 dark:border-stone-850/40">
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-stone-200/40 dark:border-stone-850/40">
           
           <div className="flex items-center gap-2">
             {/* Active Filter Indicators */}
@@ -208,6 +290,9 @@ export const Categories: React.FC = () => {
             >
               <SlidersHorizontal size={14} />
               <span>{t('filterTitle')}</span>
+              {selectedCategory !== 'all' && (
+                <span className="w-2 h-2 rounded-full bg-amber-600" />
+              )}
             </button>
 
             {/* Grid/List View switcher */}
