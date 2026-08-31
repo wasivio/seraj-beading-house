@@ -192,8 +192,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       : appliedCoupon.value
     : 0;
 
-  // Free shipping above ₹1000, otherwise flat ₹150. If cart is empty, shipping is 0
-  const shippingCharge = subtotal === 0 ? 0 : subtotal > 1999 ? 0 : 150;
+  // Free shipping above ₹1999, otherwise flat ₹50. If cart is empty, shipping is 0
+  const shippingCharge = subtotal === 0 ? 0 : subtotal > 1999 ? 0 : 50;
   
   // Tax is inclusive in product price, so set to 0
   const tax = 0;
