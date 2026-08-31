@@ -62,12 +62,12 @@ export const Checkout: React.FC = () => {
   const [gpsCoords, setGpsCoords] = useState<{ lat?: number; lng?: number; accuracy?: number }>({});
 
   // Slot states
-  const [deliveryDate, setDeliveryDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+  const [deliveryDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 5);
+    return d.toISOString().split('T')[0];
   });
-  const [deliveryTime, setDeliveryTime] = useState('10:00 AM - 01:00 PM');
+  const [deliveryTime] = useState('Standard Delivery');
 
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'net_banking' | 'cod' | 'wallet'>('cod');
@@ -280,23 +280,6 @@ export const Checkout: React.FC = () => {
       setPlacingOrder(false);
     }
   };
-
-  // Delivery Dates Picker options (Next 3 days)
-  const getDates = () => {
-    const dates = [];
-    for (let i = 1; i <= 3; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      dates.push(d);
-    }
-    return dates;
-  };
-
-  const deliveryTimes = [
-    '09:00 AM - 12:00 PM (Morning)',
-    '01:00 PM - 04:00 PM (Afternoon)',
-    '05:00 PM - 08:00 PM (Evening)'
-  ];
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
@@ -612,59 +595,30 @@ export const Checkout: React.FC = () => {
           {step === 2 && (
             <div className="flex flex-col gap-4">
               
-              {/* Delivery Slot Selector */}
-              <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm">
-                <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 mb-4 border-b border-stone-100 dark:border-stone-850/30 pb-2">
+              {/* Expected Delivery Date */}
+              <div className="bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/40 rounded-3xl p-5 shadow-sm text-left">
+                <h3 className="font-sans font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 mb-3 border-b border-stone-100 dark:border-stone-850/30 pb-2">
                   <Clock size={16} className="text-amber-705" />
-                  <span>{t('selectSlot')}</span>
+                  <span>Delivery Details</span>
                 </h3>
 
-                {/* Dates pick row */}
-                <div className="flex gap-3 mb-4 overflow-x-auto no-scrollbar">
-                  {getDates().map((date, idx) => {
-                    const dStr = date.toISOString().split('T')[0];
-                    const active = deliveryDate === dStr;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => setDeliveryDate(dStr)}
-                        className={`flex-shrink-0 flex flex-col items-center gap-1.5 p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                          active
-                            ? 'border-amber-700 bg-amber-50 dark:bg-amber-950/20 text-amber-705 font-bold'
-                            : 'border-stone-200 text-stone-500'
-                        }`}
-                      >
-                        <span className="text-[10px] uppercase font-bold tracking-wider">
-                          {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                        </span>
-                        <span className="text-base font-extrabold">{date.getDate()}</span>
-                        <span className="text-[9px] text-stone-400">
-                          {date.toLocaleDateString('en-US', { month: 'short' })}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Time Slots pick */}
-                <div className="flex flex-col gap-2">
-                  {deliveryTimes.map((time, idx) => {
-                    const active = deliveryTime === time;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => setDeliveryTime(time)}
-                        className={`w-full text-left p-3.5 border rounded-xl text-xs flex items-center justify-between cursor-pointer ${
-                          active
-                            ? 'border-amber-750 bg-amber-50/20 text-amber-800 dark:text-amber-450 font-semibold'
-                            : 'border-stone-200 text-stone-500 hover:bg-stone-50/50'
-                        }`}
-                      >
-                        <span>{time}</span>
-                        {active && <Check size={14} className="text-amber-700 dark:text-amber-400" />}
-                      </button>
-                    );
-                  })}
+                <div className="flex flex-col gap-2.5">
+                  <div className="p-4 bg-amber-50/10 dark:bg-amber-955/10 border border-amber-600/25 rounded-2xl">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-amber-700 dark:text-amber-400">
+                      Expected Hand-Delivery Date
+                    </span>
+                    <h4 className="font-sans font-extrabold text-base text-stone-900 dark:text-stone-100 mt-1">
+                      {new Date(deliveryDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h4>
+                    <p className="text-[11px] text-stone-400 mt-1 leading-relaxed">
+                      Standard home delivery takes exactly 5 days from the order date. Dispatched via Siraj Bedding House delivery partners.
+                    </p>
+                  </div>
                 </div>
               </div>
 
