@@ -195,9 +195,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Free shipping above ₹1000, otherwise flat ₹150. If cart is empty, shipping is 0
   const shippingCharge = subtotal === 0 ? 0 : subtotal > 1999 ? 0 : 150;
   
-  // Simulated 18% GST included in grand total
-  const tax = Math.round((subtotal - discount) * 0.18);
-  const grandTotal = Math.max(0, subtotal - discount + shippingCharge + tax);
+  // Tax is inclusive in product price, so set to 0
+  const tax = 0;
+  const grandTotal = Math.max(0, subtotal - discount + shippingCharge);
 
   return (
     <CartContext.Provider

@@ -23,7 +23,6 @@ export const Cart: React.FC = () => {
     removeCouponCode,
     subtotal,
     shippingCharge,
-    tax,
     discount,
     grandTotal
   } = useCart();
@@ -237,10 +236,6 @@ export const Cart: React.FC = () => {
                 <div className="flex justify-between text-stone-500 dark:text-stone-400">
                   <span>{t('shipping')}</span>
                   <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge.toLocaleString('en-IN')}`}</span>
-                </div>
-                <div className="flex justify-between text-stone-500 dark:text-stone-400">
-                  <span>{t('tax')}</span>
-                  <span>₹{tax.toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-stone-100 dark:border-stone-850/30 pt-3 text-sm font-extrabold text-stone-900 dark:text-stone-100">

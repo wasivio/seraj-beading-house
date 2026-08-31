@@ -794,10 +794,7 @@ export const Checkout: React.FC = () => {
               <span>{t('shipping')}</span>
               <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}</span>
             </div>
-            <div className="flex justify-between text-stone-500 dark:text-stone-400">
-              <span>{t('tax')}</span>
-              <span>₹{tax.toLocaleString()}</span>
-            </div>
+            
             <div className="flex justify-between border-t border-stone-100 dark:border-stone-850/30 pt-3 text-sm font-extrabold text-stone-900 dark:text-stone-100">
               <span>{t('total')}</span>
               <span>₹{grandTotal.toLocaleString()}</span>
