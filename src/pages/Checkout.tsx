@@ -675,33 +675,54 @@ export const Checkout: React.FC = () => {
                   <span>{t('paymentMethod')}</span>
                 </h3>
 
-                <div className="flex flex-col gap-3">
+                 <div className="flex flex-col gap-3">
                   {([
-                    { id: 'cod', label: 'Cash On Delivery (COD)', desc: 'Pay when items are hand-delivered.' },
-                    { id: 'upi', label: 'UPI (Paytm / GPay / PhonePe)', desc: 'Instant verification. Seamless payout.' },
-                    { id: 'card', label: 'Credit / Debit Card', desc: 'Secure card checkout.' },
-                    { id: 'net_banking', label: 'Net Banking', desc: 'Secure banking gateway.' }
+                    { id: 'cod', label: 'Cash On Delivery (COD)', desc: 'Pay when items are hand-delivered.', isComingSoon: false },
+                    { id: 'upi', label: 'UPI (Paytm / GPay / PhonePe)', desc: 'Instant verification. Seamless payout.', isComingSoon: true },
+                    { id: 'card', label: 'Credit / Debit Card', desc: 'Secure card checkout.', isComingSoon: true },
+                    { id: 'net_banking', label: 'Net Banking', desc: 'Secure banking gateway.', isComingSoon: true }
                   ] as const).map(pm => {
                     const active = paymentMethod === pm.id;
+                    const isComingSoon = pm.isComingSoon;
                     return (
                       <div
                         key={pm.id}
-                        onClick={() => setPaymentMethod(pm.id)}
-                        className={`p-3.5 border rounded-2xl cursor-pointer flex gap-3 items-start transition-all ${
-                          active
-                            ? 'border-amber-700 bg-amber-50/10 dark:bg-amber-955/15'
-                            : 'border-stone-200 hover:border-stone-300'
+                        onClick={() => {
+                          if (!isComingSoon) {
+                            setPaymentMethod(pm.id);
+                          }
+                        }}
+                        className={`p-3.5 border rounded-2xl flex gap-3 items-start transition-all ${
+                          isComingSoon
+                            ? 'opacity-60 cursor-not-allowed border-stone-200 dark:border-stone-850'
+                            : active
+                            ? 'border-amber-700 bg-amber-50/10 dark:bg-amber-955/15 cursor-pointer'
+                            : 'border-stone-200 hover:border-stone-300 cursor-pointer'
                         }`}
                       >
                         <input
                           type="radio"
                           name="payment_choice"
                           checked={active}
-                          onChange={() => setPaymentMethod(pm.id)}
-                          className="text-amber-700 focus:ring-amber-550 border-stone-300 mt-0.5 cursor-pointer"
+                          disabled={isComingSoon}
+                          onChange={() => {
+                            if (!isComingSoon) {
+                              setPaymentMethod(pm.id);
+                            }
+                          }}
+                          className={`text-amber-700 focus:ring-amber-550 border-stone-300 mt-0.5 ${
+                            isComingSoon ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                          }`}
                         />
-                        <div className="flex flex-col">
-                          <span className="font-sans font-bold text-xs">{pm.label}</span>
+                        <div className="flex flex-col text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-sans font-bold text-xs">{pm.label}</span>
+                            {isComingSoon && (
+                              <span className="text-[9px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 px-2 py-0.5 rounded-full border border-stone-200/50 dark:border-stone-800">
+                                Coming Soon
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] text-stone-400 mt-0.5 leading-tight">{pm.desc}</span>
                         </div>
                       </div>
